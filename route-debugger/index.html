@@ -34,27 +34,56 @@
     .fields input, .fields select { display: block; width: 100%; margin-top: 1px; font: 12px/1.4 system-ui, sans-serif; }
 
     #result[hidden] { display: none; }
+    #view { display: flex; gap: 14px; margin: 10px 10px 0; font-weight: 600; }
+    #view label { display: flex; gap: 4px; align-items: center; cursor: pointer; }
+    #view input { margin: 0; }
+    #view button { margin-left: auto; font-weight: 400; }
+
+    #filters-dialog { width: 460px; max-width: calc(100vw - 20px); padding: 14px; border: 1px solid #d1d5db; border-radius: 8px; color: inherit; box-shadow: 0 8px 30px rgb(0 0 0 / 0.3); }
+    #filters-dialog::backdrop { background: rgb(0 0 0 / 0.3); }
+    #filters-dialog h2 { margin: 0 0 6px; font-size: 14px; }
+    #filters-dialog p { margin: 0 0 8px; color: #6b7280; }
+    #filters-input { display: block; width: 100%; height: 260px; padding: 8px; resize: vertical; border: 1px solid #d1d5db; border-radius: 6px; font: 11px/1.4 ui-monospace, monospace; }
+    #filters-error { margin-top: 8px; color: #b91c1c; }
+    #filters-error:empty { display: none; }
+    #filters-buttons { display: flex; gap: 6px; margin-top: 10px; }
+    #filters-cancel { margin-left: auto; }
     #routes { display: block; width: calc(100% - 20px); margin: 10px 10px 0; }
     #routes[hidden] { display: none; }
     #summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 10px 0; }
     #summary div { padding: 6px 8px; background: #f3f4f6; border-radius: 6px; }
     #summary small { display: block; color: #6b7280; }
     #summary b { font-variant-numeric: tabular-nums; }
-    #copies { display: flex; gap: 6px; align-items: center; margin: 8px 10px; color: #6b7280; }
+    #copies { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 8px 10px; color: #6b7280; }
+    #copies [hidden], #themes[hidden], #steps[hidden], #edges[hidden] { display: none; }
 
-    #steps { margin: 0; padding: 0; list-style: none; border-top: 1px solid #e5e7eb; }
-    #steps .leg { position: sticky; top: 0; padding: 6px 10px; background: #f3f4f6; font-weight: 600; }
-    #steps .leg .bad { color: #b91c1c; }
+    #themes { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 8px; align-items: center; margin: 0 10px 10px; }
+    #themes select { min-width: 0; }
+    #themes label { display: flex; gap: 4px; align-items: center; }
+    #themes input { margin: 0; }
+    .legend { grid-column: 1 / -1; max-height: 120px; overflow-y: auto; font-variant-numeric: tabular-nums; }
+    .legend:empty { display: none; }
+    .legend .row { display: flex; gap: 6px; align-items: center; }
+    .legend .row i { width: 10px; height: 10px; flex: none; border-radius: 2px; }
+    .legend .row span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .legend .row small, .legend .ends { color: #6b7280; }
+    .legend .ramp { height: 8px; border-radius: 4px; }
+    .legend .ends { display: flex; justify-content: space-between; }
+
+    #steps, #edges { margin: 0; padding: 0; list-style: none; border-top: 1px solid #e5e7eb; }
+    #steps .leg, #edges .leg { position: sticky; top: 0; padding: 6px 10px; background: #f3f4f6; font-weight: 600; }
+    #steps .leg .bad, #edges .leg .bad { color: #b91c1c; }
     #steps .leg .ok { color: #15803d; font-weight: 400; }
-    #steps .step { display: flex; gap: 8px; padding: 6px 10px 6px 0; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
-    #steps .step.active { background: #fef9c3; }
+    #steps .step, #edges .edge { display: flex; gap: 8px; padding: 6px 10px 6px 0; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
+    #steps .step.active, #edges .edge.active { background: #fef9c3; }
     .swatch { width: 4px; flex: none; border-radius: 0 2px 2px 0; }
     .instr { flex: 1; min-width: 0; }
     .instr small { display: block; color: #6b7280; }
-    .metrics { flex: none; text-align: right; font-variant-numeric: tabular-nums; }
+    .metrics { flex: none; max-width: 45%; text-align: right; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
     .metrics small { display: block; color: #6b7280; }
+    .metrics small:empty { display: none; }
     .metrics .turns { color: #b91c1c; }
-    .metrics .turns:empty { display: none; }
+    .metrics .dot { display: inline-block; width: 8px; height: 8px; margin-right: 4px; border: 1px solid #1f2937; border-radius: 50%; }
 
     #saved-views { flex: none; padding-bottom: 10px; border-top: 1px solid #e5e7eb; }
     #views { display: flex; flex-wrap: wrap; gap: 6px; max-height: 84px; overflow-y: auto; margin: 8px 10px 0; }
@@ -69,7 +98,11 @@
     .step-label { padding: 1px 5px; background: #fff; border: 2px solid; border-radius: 4px; font: 600 12px/1.3 ui-monospace, monospace; white-space: nowrap; cursor: pointer; box-shadow: 0 1px 3px rgb(0 0 0 / 0.3); }
     .step-label.active { background: #fef9c3; z-index: 1; }
     .turn-label { padding: 0 4px; background: #fef2f2; color: #b91c1c; border: 1px solid #dc2626; border-radius: 4px; font: 600 11px/1.3 ui-monospace, monospace; white-space: nowrap; cursor: pointer; box-shadow: 0 1px 3px rgb(0 0 0 / 0.3); }
-    .maplibregl-popup-content pre { margin: 0; font: 11px/1.5 ui-monospace, monospace; }
+    /* labels let clicks through to the feature underneath */
+    .edge-label, .node-label { max-width: 160px; overflow: hidden; text-overflow: ellipsis; background: #fff; border: 2px solid; border-radius: 4px; font: 600 11px/1.3 ui-monospace, monospace; white-space: nowrap; pointer-events: none; box-shadow: 0 1px 3px rgb(0 0 0 / 0.3); }
+    .edge-label { padding: 1px 5px; }
+    .node-label { padding: 0 4px; border-radius: 9px; font-weight: 400; }
+    .maplibregl-popup-content pre { margin: 0; max-height: 320px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font: 11px/1.5 ui-monospace, monospace; }
 
     .menu-backdrop { position: fixed; inset: 0; z-index: 10; }
     .menu { position: fixed; display: flex; flex-direction: column; min-width: 170px; max-height: 60vh; overflow-y: auto; padding: 4px; background: #fff; border: 1px solid #d1d5db; border-radius: 6px; box-shadow: 0 4px 12px rgb(0 0 0 / 0.25); }
@@ -111,14 +144,31 @@
         <div id="costing-fields" class="fields"></div>
       </details>
       <div id="result" hidden>
+        <div id="view">
+          <label title="The steps of the route with their weights and turn weights"><input type="radio" name="view" value="steps" checked> Maneuvers</label>
+          <label title="The edges of the route with their attributes, from a trace_attributes request for the shape of each leg"><input type="radio" name="view" value="edges"> Edges</label>
+          <button id="filters-open" type="button" title="Which attributes the trace_attributes requests ask for"></button>
+        </div>
         <select id="routes" hidden></select>
         <div id="summary"></div>
         <div id="copies">
           Copy
-          <button id="copy" type="button">response</button>
+          <button id="copy" type="button" title="The route response">response</button>
           <button id="copy-trace" type="button" title="A trace_attributes request that edge-walks the shape of this route">trace_attributes</button>
+          <button id="copy-trace-response" type="button" title="The trace_attributes response the edges view shows; one per leg when the route has several" hidden>trace_attributes response</button>
+        </div>
+        <div id="themes" hidden>
+          <label><input id="edge-visible" type="checkbox"> Edges</label>
+          <select id="edge-theme"></select>
+          <label><input id="edge-labels" type="checkbox"> labels</label>
+          <div id="edge-legend" class="legend"></div>
+          <label><input id="node-visible" type="checkbox"> Nodes</label>
+          <select id="node-theme"></select>
+          <label><input id="node-labels" type="checkbox"> labels</label>
+          <div id="node-legend" class="legend"></div>
         </div>
         <ol id="steps"></ol>
+        <ol id="edges" hidden></ol>
       </div>
     </div>
 
@@ -131,6 +181,20 @@
     </div>
   </aside>
   <div id="map"></div>
+
+  <dialog id="filters-dialog">
+    <form method="dialog">
+      <h2>Attribute filter</h2>
+      <p>The <code>filters</code> object of the trace_attributes requests, as the <a href="../attributes-controller-builder/index.html" target="_blank">attributes controller builder</a> writes it. Leave it empty to get every attribute. The shape and the shape indices of the edges are always asked for, the edges view draws from them.</p>
+      <textarea id="filters-input" spellcheck="false" placeholder='{ "filters": { "attributes": ["edge.names", "edge.speed"], "action": "include" } }'></textarea>
+      <div id="filters-error"></div>
+      <div id="filters-buttons">
+        <button type="submit">Apply</button>
+        <button id="filters-clear" type="button">Clear filter</button>
+        <button id="filters-cancel" type="button">Cancel</button>
+      </div>
+    </form>
+  </dialog>
 
   <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
   <script src="costing-options.js"></script>
