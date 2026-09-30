@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """Picks the option of the day for the front page from Valhalla's OpenAPI spec.
 
-Usage: scripts/option-of-the-day.py [--spec path/to/newer/openapi.yaml] [--commit sha]
+Usage: scripts/option-of-the-day.py [--spec path/to/newer/openapi.yaml]
 
 With --spec, that spec replaces the repository's openapi.yaml first, and an option that changed
-between the two is picked. Otherwise, or when nothing changed, the pick is random. Only costing
-options and location options take part.
+between the two is picked. Otherwise, or when nothing changed, the pick is random. Costing options,
+location options and the top-level options of the requests take part.
 """
 import argparse
-import datetime
 import html
 import random
 import re
@@ -27,6 +26,8 @@ SUFFIX = 'CostingOptions'
 FIELDS = ('type', 'default', 'minimum', 'maximum', 'enum', 'description')
 # the coordinates themselves aren't options
 NOT_OPTIONS = {'lat', 'lon'}
+# what a request is about rather than how it's answered, and the costing options, which count on their own
+NOT_REQUEST_OPTIONS = {'locations', 'sources', 'targets', 'shape', 'encoded_polyline', 'costing_options'}
 
 
 def ref_name(ref):
@@ -49,6 +50,8 @@ def describe(schemas, spec):
     if '$ref' in spec:
         spec = {**schemas[ref_name(spec['$ref'])], **{key: value for key, value in spec.items() if key != '$ref'}}
     option = {key: spec[key] for key in FIELDS if key in spec}
+    if 'oneOf' in spec and 'type' not in spec:
+        option['type'] = ' or '.join(part.get('type', ref_name(part.get('$ref', '#/value'))) for part in spec['oneOf'])
     if spec.get('type') == 'array':
         items = spec.get('items', {})
         option['type'] = f"array of {ref_name(items['$ref']) if '$ref' in items else items.get('type', 'values')}"
@@ -57,7 +60,7 @@ def describe(schemas, spec):
 
 
 def extract(path):
-    """Every costing and location option in a spec, by an id that is stable across versions."""
+    """Every costing, location and request option in a spec, by an id that is stable across versions."""
     schemas = yaml.safe_load(path.read_text())['components']['schemas']
     options = {}
 
@@ -81,7 +84,38 @@ def extract(path):
                 options[f'Location.{name}.{sub}'] = {'name': f'{name}.{sub}', 'scope': 'location option', **describe(schemas, sub_spec)}
         else:
             options[f'Location.{name}'] = {'name': name, 'scope': 'location option', **describe(schemas, spec)}
+
+    # an option the endpoints share, in the same shape, is one option
+    endpoints = {}
+    for path, operations in spec_paths(path).items():
+        body = operations.get('post', {}).get('requestBody', {}).get('content', {}).get('application/json', {}).get('schema', {})
+        if '$ref' in body:
+            endpoints[path] = resolve(schemas, body)
+    shared = {}
+    for path, properties in endpoints.items():
+        for name, spec in properties.items():
+            if name not in NOT_REQUEST_OPTIONS:
+                shared.setdefault((name, repr(spec)), (spec, []))[1].append(path)
+    variants = {}
+    for name, _ in shared:
+        variants[name] = variants.get(name, 0) + 1
+    for (name, _), (spec, paths) in shared.items():
+        option_id = f'Request.{name}' if variants[name] == 1 else f"Request.{name}.{'+'.join(paths)}"
+        options[option_id] = {'name': name, 'scope': f'request option · {endpoint_scope(paths, list(endpoints))}', **describe(schemas, spec)}
     return options
+
+
+def spec_paths(path):
+    return yaml.safe_load(path.read_text())['paths']
+
+
+def endpoint_scope(paths, everything):
+    if paths == everything:
+        return 'all endpoints'
+    missing = [path for path in everything if path not in paths]
+    if len(missing) < len(paths):
+        return f"all endpoints but {', '.join(missing)}"
+    return ', '.join(paths)
 
 
 def changes(old, new):
@@ -92,6 +126,10 @@ def changes(old, new):
             continue
         if field == 'description':
             notes.append('description updated')
+        elif field == 'enum':
+            added = [str(item) for item in new.get('enum', []) if item not in old.get('enum', [])]
+            removed = [str(item) for item in old.get('enum', []) if item not in new.get('enum', [])]
+            notes += [f'{label}: {", ".join(items)}' for label, items in (('new values', added), ('values removed', removed)) if items]
         else:
             notes.append(f"{field}: {old.get(field, '–')} → {new.get(field, '–')}")
     return notes
@@ -106,30 +144,30 @@ def inline(text):
 
 
 def value(option, field):
-    if field not in option:
-        return '–'
-    return html.escape(', '.join(map(str, option[field])) if isinstance(option[field], list) else str(option[field]).lower() if isinstance(option[field], bool) else str(option[field]))
+    if isinstance(option[field], bool):
+        return str(option[field]).lower()
+    return html.escape(str(option[field]))
 
 
-def render(option_id, option, badge, notes, commit):
-    rows = [('type', 'type'), ('default', 'default'), ('min', 'minimum'), ('max', 'maximum')]
-    if 'enum' in option:
-        rows.append(('values', 'enum'))
-    details = ''.join(f'<dt>{label}</dt><dd>{value(option, field)}</dd>' for label, field in rows)
-    badge_html = f' <span class="ootd-badge">{badge}</span>' if badge else ''
+def render(option_id, option, badge, notes):
+    kind, _, costings = option['scope'].partition(' · ')
+    scope = f'<span class="ootd-kind">{html.escape(kind)}</span>' + (f'for {html.escape(costings)}' if costings else '')
+    # type and default always, as "no default" says something too; the range only when there is one
+    facts = [('type', option.get('type', '–')), ('default', value(option, 'default') if 'default' in option else '–')]
+    facts += [(label, value(option, field)) for label, field in (('min', 'minimum'), ('max', 'maximum')) if field in option]
+    facts_html = ''.join(f'<div><small>{label}</small><b>{text}</b></div>' for label, text in facts)
+    values_html = ''.join(f'<code>{html.escape(str(item))}</code>' for item in option.get('enum', []))
+    badge_html = f'<span class="ootd-badge">{badge}</span>' if badge else ''
     notes_html = ''.join(f'<li>{html.escape(note)}</li>' for note in notes)
-    source = f' · valhalla@{html.escape(commit)}' if commit else ''
     return f'''{START}
-    <section id="option-of-the-day" data-option="{html.escape(option_id)}">
-      <h2>Costing option of the day</h2>
-      <div class="ootd">
-        <div class="ootd-head"><code>{html.escape(option['name'])}</code>{badge_html}</div>
-        <small class="ootd-scope">{html.escape(option['scope'])}</small>
-        {f'<ul class="ootd-changes">{notes_html}</ul>' if notes else ''}
-        <dl>{details}</dl>
-        <p>{inline(option['description']) or 'No description.'}</p>
-        <small class="ootd-source">{datetime.date.today().isoformat()}{source}</small>
-      </div>
+    <section id="option-of-the-day" class="ootd" data-option="{html.escape(option_id)}">
+      <h2 class="ootd-title">Option of the Day</h2>
+      <div class="ootd-name"><code>{html.escape(option['name'])}</code>{badge_html}</div>
+      <div class="ootd-scope">{scope}</div>
+      {f'<ul class="ootd-changes">{notes_html}</ul>' if notes else ''}
+      <p class="ootd-description">{inline(option['description']) or 'No description.'}</p>
+      <div class="ootd-facts">{facts_html}</div>
+      {f'<div class="ootd-values"><small>one of</small>{values_html}</div>' if values_html else ''}
     </section>
     {END}'''
 
@@ -137,7 +175,6 @@ def render(option_id, option, badge, notes, commit):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--spec', type=Path, help='a newer openapi.yaml to take over')
-    parser.add_argument('--commit', help='the Valhalla commit the spec comes from, shown on the page')
     args = parser.parse_args()
 
     old = extract(SPEC)
@@ -157,7 +194,8 @@ def main():
         option_id = random.choice([option_id for option_id in new if not current or option_id != html.unescape(current.group(1))])
         badge, notes = None, []
 
-    section = render(option_id, new[option_id], badge, notes, args.commit)
+    # the optional parts leave empty lines behind
+    section = '\n'.join(line for line in render(option_id, new[option_id], badge, notes).splitlines() if line.strip())
     pattern = re.compile(re.escape(START) + '.*?' + re.escape(END), re.S)
     if not pattern.search(page):
         raise SystemExit(f'{PAGE} has no {START} … {END} markers')

@@ -92,58 +92,117 @@
       }
 
       .ootd {
-        padding: 14px 16px;
-        border: 1px solid #d1d5db;
-        border-left: 4px solid #2563eb;
-        border-radius: 6px;
+        margin-top: 32px;
+        padding: 20px 22px 22px;
+        border: 1px solid #bfdbfe;
+        border-radius: 12px;
+        background: #eff6ff;
       }
-      .ootd-head code {
+      .ootd-title {
+        margin: 0 0 14px;
+        color: #111827;
         font:
-          600 15px/1.4 ui-monospace,
+          italic 800 26px/1.2 Georgia,
+          'Times New Roman',
+          serif;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+      .ootd-name {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .ootd-name code {
+        font:
+          700 20px/1.3 ui-monospace,
           monospace;
+        overflow-wrap: anywhere;
       }
       .ootd-badge {
-        margin-left: 6px;
-        padding: 1px 6px;
-        border-radius: 4px;
+        padding: 2px 8px;
+        border-radius: 999px;
         background: #fef3c7;
         color: #92400e;
         font-size: 11px;
         font-weight: 600;
       }
-      .ootd-scope,
-      .ootd-source {
-        display: block;
+      .ootd-scope {
+        margin-top: 4px;
         color: #6b7280;
       }
+      .ootd-kind {
+        margin-right: 6px;
+        padding: 1px 8px;
+        border-radius: 999px;
+        background: #2563eb;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 600;
+      }
       .ootd-changes {
-        margin: 8px 0 0;
-        padding-left: 18px;
+        margin: 12px 0 0;
+        padding: 8px 12px 8px 28px;
+        border-radius: 8px;
+        background: #fffbeb;
         color: #92400e;
         list-style: disc;
       }
-      .ootd dl {
+      .ootd-description {
+        margin: 14px 0 0;
+        color: #1f2937;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+      .ootd-description code {
+        padding: 0 4px;
+        border-radius: 4px;
+        background: #e5e7eb;
+        font-size: 12px;
+      }
+      .ootd-facts {
         display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 2px 12px;
-        margin: 10px 0;
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        gap: 8px;
+        margin-top: 16px;
       }
-      .ootd dt {
+      .ootd-facts div {
+        padding: 8px 10px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: #fff;
+      }
+      .ootd-facts small {
+        display: block;
         color: #6b7280;
+        font-size: 11px;
       }
-      .ootd dd {
-        margin: 0;
-        font-family: ui-monospace, monospace;
+      .ootd-facts b {
+        font:
+          600 14px/1.4 ui-monospace,
+          monospace;
         overflow-wrap: anywhere;
       }
-      .ootd p {
-        margin: 0 0 8px;
-        color: inherit;
+      .ootd-values {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 10px;
       }
-      .ootd p code {
-        padding: 0 3px;
-        border-radius: 3px;
-        background: #f3f4f6;
+      .ootd-values {
+        align-items: center;
+      }
+      .ootd-values small {
+        color: #6b7280;
+        font-size: 11px;
+      }
+      .ootd-values code {
+        padding: 2px 8px;
+        border: 1px solid #d1d5db;
+        border-radius: 999px;
+        background: #fff;
+        font-size: 12px;
       }
     </style>
   </head>
@@ -179,16 +238,12 @@
     </ul>
 
     <!-- option-of-the-day:start -->
-    <section id="option-of-the-day" data-option="Truck.axle_count">
-      <h2>Costing option of the day</h2>
-      <div class="ootd">
-        <div class="ootd-head"><code>axle_count</code></div>
-        <small class="ootd-scope">costing option · truck</small>
-        
-        <dl><dt>type</dt><dd>integer</dd><dt>default</dt><dd>5</dd><dt>min</dt><dd>2</dd><dt>max</dt><dd>20</dd></dl>
-        <p>The axle count of the truck.</p>
-        <small class="ootd-source">2026-09-30 · valhalla@685e3d8</small>
-      </div>
+    <section id="option-of-the-day" class="ootd" data-option="Transit.transfer_cost">
+      <h2 class="ootd-title">Option of the Day</h2>
+      <div class="ootd-name"><code>transfer_cost</code></div>
+      <div class="ootd-scope"><span class="ootd-kind">costing option</span>for multimodal, transit</div>
+      <p class="ootd-description">Time cost (seconds) per transfer. Influences ETA.</p>
+      <div class="ootd-facts"><div><small>type</small><b>number</b></div><div><small>default</small><b>15</b></div><div><small>min</small><b>0</b></div><div><small>max</small><b>43200</b></div></div>
     </section>
     <!-- option-of-the-day:end -->
   </body>
