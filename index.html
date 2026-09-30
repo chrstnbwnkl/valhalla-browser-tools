@@ -1,54 +1,155 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Route debug tools</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0 auto; max-width: 640px; padding: 32px 16px; font: 13px/1.4 system-ui, sans-serif; color: #1f2937; }
-    h1 { margin: 0 0 4px; font-size: 20px; }
-    p { margin: 0 0 20px; color: #6b7280; }
-    ul { margin: 0; padding: 0; list-style: none; }
-    li a { display: block; margin-bottom: 8px; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; color: inherit; text-decoration: none; }
-    li a:hover { background: #f3f4f6; }
-    li small { display: block; color: #6b7280; }
-  </style>
-</head>
-<body>
-  <h1>Route debug tools</h1>
-  <p>Small browser-only tools for debugging routing engine output.</p>
-  <ul>
-    <li>
-      <a href="osrm-step-debugger/index.html">
-        <b>OSRM step debugger</b>
-        <small>Paste an OSRM-format response and inspect its legs, steps and turn weights on a map.</small>
-      </a>
-    </li>
-    <li>
-      <a href="trace-attributes-visualizer/index.html">
-        <b>Trace attributes visualizer</b>
-        <small>Paste a Valhalla trace_attributes response and color its edges and nodes by any attribute.</small>
-      </a>
-    </li>
-    <li>
-      <a href="route-debugger/index.html">
-        <b>Route debugger</b>
-        <small>Click waypoints on a map, tune location and costing options, and inspect the weights and turn weights of the Valhalla route.</small>
-      </a>
-    </li>
-    <li>
-      <a href="locate-visualizer/index.html">
-        <b>Locate visualizer</b>
-        <small>Click a map to send Valhalla locate requests and see the edges and nodes each location snaps to.</small>
-      </a>
-    </li>
-    <li>
-      <a href="attributes-controller-builder/index.html">
-        <b>Attributes controller builder</b>
-        <small>Pick Valhalla attributes from a list and get the include or exclude filter as JSON.</small>
-      </a>
-    </li>
-  </ul>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Valhalla Browser Tools</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0 auto;
+        max-width: 640px;
+        padding: 32px 16px;
+        font:
+          13px/1.4 system-ui,
+          sans-serif;
+        color: #1f2937;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 20px;
+      }
+      h2 {
+        margin: 24px 0 8px;
+        color: #6b7280;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      p {
+        margin: 0;
+        color: #6b7280;
+      }
+      ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      li a {
+        display: block;
+        margin-bottom: 8px;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        color: inherit;
+        text-decoration: none;
+      }
+      li a:hover {
+        background: #f3f4f6;
+      }
+      li small {
+        display: block;
+        color: #6b7280;
+      }
+
+      .playgrounds {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 10px;
+      }
+      .playgrounds li a {
+        height: 100%;
+        margin: 0;
+        padding: 16px;
+        border: 2px solid #2563eb;
+        border-radius: 8px;
+        background: #eff6ff;
+      }
+      .playgrounds li a:hover {
+        background: #dbeafe;
+      }
+      .playgrounds li b {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 16px;
+      }
+      .playgrounds li code {
+        display: inline-block;
+        margin-bottom: 8px;
+        padding: 0 6px;
+        border-radius: 4px;
+        background: #2563eb;
+        color: #fff;
+        font:
+          600 11px/1.6 ui-monospace,
+          monospace;
+      }
+      .playgrounds li small {
+        color: #374151;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Valhalla Browser Tools</h1>
+    <p>Small browser-only tools for the expert user.</p>
+
+    <h2>Playgrounds</h2>
+    <ul class="playgrounds">
+      <li>
+        <a href="route-debugger/index.html">
+          <b>Route debugger</b>
+          <code>/route</code>
+          <small
+            >Click waypoints on a map, tune location and costing options, and
+            inspect the route's weights and turn weights or the attributes of
+            its edges.</small
+          >
+        </a>
+      </li>
+      <li>
+        <a href="locate-visualizer/index.html">
+          <b>Locate visualizer</b>
+          <code>/locate</code>
+          <small
+            >Click a map to send locate requests and see the edges and nodes
+            each location snaps to.</small
+          >
+        </a>
+      </li>
+    </ul>
+
+    <h2>Miscellaneous</h2>
+    <ul>
+      <li>
+        <a href="osrm-step-debugger/index.html">
+          <b>OSRM step debugger</b>
+          <small
+            >Paste an OSRM-format response and inspect its legs, steps and turn
+            weights on a map.</small
+          >
+        </a>
+      </li>
+      <li>
+        <a href="trace-attributes-visualizer/index.html">
+          <b>Trace attributes visualizer</b>
+          <small
+            >Paste a Valhalla trace_attributes response and color its edges and
+            nodes by any attribute.</small
+          >
+        </a>
+      </li>
+      <li>
+        <a href="attributes-controller-builder/index.html">
+          <b>Attributes controller builder</b>
+          <small
+            >Pick Valhalla attributes from a list and get the include or exclude
+            filter as JSON.</small
+          >
+        </a>
+      </li>
+    </ul>
+  </body>
 </html>
