@@ -26,7 +26,12 @@ const PRESET_SERVERS = ['https://valhalla1.openstreetmap.de', 'http://localhost:
 const URL_PARAM = 'json';
 // weights and turn weights only come in this format, so every request is sent with it
 const FORMAT = 'osrm';
+// what a response is drawn with, emptied when the route goes
 const SOURCES = ['alternatives', 'steps', 'step-ends', 'intersections', 'waypoints', 'edges', 'nodes'];
+// what the request's exclude_polygons and linear_cost_factors are drawn with
+const SHAPE_SOURCES = ['exclusions', 'cost-lines'];
+// cost lines by what their factor does: avoid (> 1), prefer (< 1) or neither
+const FACTOR_COLORS = { avoid: '#dc2626', prefer: '#16a34a', neutral: '#7c3aed' };
 const STEP_COLORS = ['#2563eb', '#ea580c'];
 
 // The edges view, which colors the edges and nodes of a trace_attributes response by an attribute.
@@ -145,6 +150,10 @@ let markers = [];
 let turnMarkers = [];
 let popup = null;
 let menu = null;
+let terra = null; // terra-draw, for drawing exclude polygons and cost lines
+let drawMode = null; // what a click on the map draws: 'polygon', 'linestring', or null for adding waypoints
+let factorPopup = null; // where the factor of a cost line is edited
+let factorMarkers = [];
 let costingFields = []; // the inputs of the costing options, which depend on the costing
 let shownCosting = null; // the costing those inputs are for
 
@@ -620,6 +629,7 @@ function updateUrl() {
 function requestChanged() {
   updateUrl();
   drawInputs();
+  drawShapes();
 }
 
 // Call after changing `request` in code.
@@ -662,6 +672,151 @@ function moveLocation(from, to) {
   next.splice(to, 0, ...next.splice(from, 1));
   setLocations(next);
 }
+
+// --- exclude polygons and cost lines ---------------------------------------
+
+const round6 = ([lon, lat]) => [+lon.toFixed(6), +lat.toFixed(6)];
+
+// The outer rings of exclude_polygons, which is a list of rings or a GeoJSON FeatureCollection.
+// `i` is where the ring is in the request.
+function exclusionRings() {
+  const value = request?.exclude_polygons;
+  const rings = Array.isArray(value) ? value : value?.type === 'FeatureCollection' ? value.features?.map((feature) => feature?.geometry?.coordinates?.[0]) : [];
+  return (rings ?? []).map((ring, i) => ({ i, ring })).filter(({ ring }) => Array.isArray(ring) && ring.length > 2);
+}
+
+function addExclusion(ring) {
+  const value = request.exclude_polygons;
+  if (value?.type === 'FeatureCollection' && Array.isArray(value.features)) {
+    value.features.push({ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } });
+  } else {
+    request.exclude_polygons = [...(Array.isArray(value) ? value : []), ring];
+  }
+  writeRequest();
+  route();
+}
+
+// `i` is where the ring is in the request; without one, every polygon goes.
+function deleteExclusions(i) {
+  const value = request.exclude_polygons;
+  const list = Array.isArray(value) ? value : value?.features;
+  if (i !== undefined && Array.isArray(list)) list.splice(i, 1);
+  if (i === undefined || !list?.length) delete request.exclude_polygons;
+  writeRequest();
+  route();
+}
+
+// The lines of linear_cost_factors, each an encoded shape with a factor or a GeoJSON feature with a factor property.
+function costLines() {
+  const entries = Array.isArray(request?.linear_cost_factors) ? request.linear_cost_factors : [];
+  return entries
+    .map((entry, i) => ({
+      i,
+      coords: typeof entry?.shape === 'string' ? decodePolyline(entry.shape, 6) : entry?.geometry?.coordinates,
+      factor: entry?.factor ?? entry?.properties?.factor,
+    }))
+    .filter(({ coords }) => Array.isArray(coords) && coords.length > 1);
+}
+
+function setFactor(i, factor) {
+  const entry = request.linear_cost_factors[i];
+  if (typeof entry.shape === 'string' || !isObject(entry.properties)) entry.factor = factor;
+  else entry.properties.factor = factor;
+  writeRequest();
+  route();
+}
+
+function deleteCostLine(i) {
+  request.linear_cost_factors.splice(i, 1);
+  if (!request.linear_cost_factors.length) delete request.linear_cost_factors;
+  writeRequest();
+  route();
+}
+
+// Cost factors apply to the edges under a line, so a drawn line is first map matched onto the edges.
+async function addCostLine(id, coords) {
+  statusEl.textContent = 'Map matching the drawn line…';
+  const server = servers.selected;
+  const body = { shape: coords.map(([lon, lat]) => ({ lon, lat })), shape_match: 'map_snap', filters: { attributes: ['shape'], action: 'include' } };
+  for (const key of ['costing', 'costing_options']) {
+    if (key in request) body[key] = request[key];
+  }
+  let data;
+  try {
+    const response = await fetch(`${server}/trace_attributes`, { method: 'POST', body: JSON.stringify(body) });
+    data = await response.json();
+  } catch (error) {
+    data = { error: error.message };
+  }
+  terra.removeFeatures([id]);
+  statusEl.textContent = state?.status ?? '';
+  if (typeof data?.shape !== 'string') {
+    return fail(`Could not map match the line: ${data?.error_code ? `error ${data.error_code}: ` : ''}${data?.error ?? 'no shape in the response'}`);
+  }
+  if (!request) return fail(INVALID_REQUEST);
+  request.linear_cost_factors = [...(Array.isArray(request.linear_cost_factors) ? request.linear_cost_factors : []), { shape: data.shape, factor: 1 }];
+  writeRequest();
+  route();
+}
+
+// Draws the exclude polygons and cost lines of the request.
+function drawShapes() {
+  const rings = exclusionRings();
+  deletePolygonsEl.hidden = !rings.length;
+  const lines = costLines();
+  for (const marker of factorMarkers) marker.remove();
+  factorMarkers = lines.map(({ i, coords, factor }) => {
+    const label = el('div', { className: 'factor-label', textContent: `× ${factor ?? '?'}`, title: 'Click to change the factor or delete the line' });
+    label.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openFactorPopup(i, midpoint(coords));
+    });
+    return new maplibregl.Marker({ element: label }).setLngLat(midpoint(coords)).addTo(map);
+  });
+  ready.then(() => {
+    map.getSource('exclusions').setData(fc(rings.map(({ i, ring }) => ({ type: 'Feature', properties: { i }, geometry: { type: 'Polygon', coordinates: [ring] } }))));
+    map.getSource('cost-lines').setData(fc(lines.map(({ i, coords, factor }) => {
+      const effect = !(typeof factor === 'number') || factor === 1 ? 'neutral' : factor > 1 ? 'avoid' : 'prefer';
+      return line(coords, { i, color: FACTOR_COLORS[effect] });
+    })));
+  });
+}
+
+function openFactorPopup(i, lngLat) {
+  const entry = request?.linear_cost_factors?.[i];
+  if (!entry) return;
+  const factorEl = el('input', { type: 'number', step: 'any', min: 0, value: entry.factor ?? entry.properties?.factor ?? '' });
+  factorEl.addEventListener('change', () => {
+    if (factorEl.value !== '') setFactor(i, Number(factorEl.value));
+  });
+  const deleteEl = el('button', { type: 'button', textContent: 'Delete', className: 'danger' });
+  deleteEl.addEventListener('click', () => {
+    factorPopup.remove();
+    deleteCostLine(i);
+  });
+  factorPopup?.remove();
+  factorPopup = new maplibregl.Popup({ maxWidth: '240px' })
+    .setLngLat(lngLat)
+    .setDOMContent(el('div', { className: 'factor-popup' }, el('label', {}, 'factor', factorEl), deleteEl))
+    .addTo(map);
+  factorEl.focus();
+  factorEl.select();
+}
+
+// `mode` is a terra-draw mode, or null to go back to adding waypoints. Choosing the active mode again ends it.
+function setDrawMode(mode) {
+  drawMode = mode === drawMode ? null : mode;
+  terra?.setMode(drawMode ?? 'static');
+  drawPolygonEl.classList.toggle('active', drawMode === 'polygon');
+  drawLineEl.classList.toggle('active', drawMode === 'linestring');
+  map.getCanvas().style.cursor = drawMode ? '' : 'crosshair';
+}
+
+// the buttons that switch between adding waypoints and drawing, on the map
+const drawPolygonEl = el('button', { type: 'button', textContent: 'Exclude polygon', title: 'Draw polygons that routes avoid; click the first point to finish one' });
+const drawLineEl = el('button', { type: 'button', textContent: 'Cost line', title: 'Draw lines whose edges get a cost factor; click the last point again to finish one' });
+const deletePolygonsEl = el('button', { type: 'button', textContent: 'Delete all polygons', className: 'danger', hidden: true });
+map.addControl({ onAdd: () => el('div', { className: 'maplibregl-ctrl draw-tools' }, drawPolygonEl, drawLineEl, deletePolygonsEl), onRemove() {} }, 'top-left');
 
 // --- context menus ----------------------------------------------------------
 
@@ -718,9 +873,12 @@ function openMarkerMenu(e, i) {
 // --- map --------------------------------------------------------------------
 
 const ready = new Promise((resolve) => map.on('load', resolve)).then(() => {
-  for (const id of SOURCES) map.addSource(id, { type: 'geojson', data: fc([]) });
+  for (const id of [...SHAPE_SOURCES, ...SOURCES]) map.addSource(id, { type: 'geojson', data: fc([]) });
 
   const round = { 'line-cap': 'round', 'line-join': 'round' };
+  map.addLayer({ id: 'exclusions-fill', type: 'fill', source: 'exclusions', paint: { 'fill-color': '#dc2626', 'fill-opacity': 0.15 } });
+  map.addLayer({ id: 'exclusions', type: 'line', source: 'exclusions', paint: { 'line-color': '#dc2626', 'line-width': 2, 'line-dasharray': [3, 2] } });
+  map.addLayer({ id: 'cost-lines', type: 'line', source: 'cost-lines', layout: round, paint: { 'line-color': ['get', 'color'], 'line-width': 12, 'line-opacity': 0.45 } });
   map.addLayer({ id: 'alternatives', type: 'line', source: 'alternatives', layout: round, paint: { 'line-color': '#9ca3af', 'line-width': 4 } });
   map.addLayer({ id: 'steps-casing', type: 'line', source: 'steps', layout: round, paint: { 'line-color': '#fff', 'line-width': 8 } });
   map.addLayer({ id: 'steps', type: 'line', source: 'steps', layout: round, paint: { 'line-color': ['get', 'color'], 'line-width': 5 } });
@@ -749,10 +907,31 @@ const ready = new Promise((resolve) => map.on('load', resolve)).then(() => {
     edges[idx]?.item.scrollIntoView({ block: 'nearest' });
   });
   map.on('mouseleave', 'edges', () => highlightEdge(null));
-  for (const layer of ['intersections', 'waypoints', 'edges', 'nodes']) {
-    map.on('mouseenter', layer, () => (map.getCanvas().style.cursor = 'pointer'));
-    map.on('mouseleave', layer, () => (map.getCanvas().style.cursor = 'crosshair'));
+  for (const layer of ['intersections', 'waypoints', 'edges', 'nodes', 'cost-lines']) {
+    map.on('mouseenter', layer, () => !drawMode && (map.getCanvas().style.cursor = 'pointer'));
+    map.on('mouseleave', layer, () => !drawMode && (map.getCanvas().style.cursor = 'crosshair'));
   }
+
+  // terra-draw only takes the drawing; a finished shape goes into the request, which is what gets drawn
+  terra = new terraDraw.TerraDraw({
+    adapter: new terraDrawMaplibreGlAdapter.TerraDrawMapLibreGLAdapter({ map }),
+    modes: [new terraDraw.TerraDrawPolygonMode(), new terraDraw.TerraDrawLineStringMode()],
+  });
+  terra.start();
+  terra.setMode(drawMode ?? 'static');
+  terra.on('finish', (id, { mode }) => {
+    const feature = terra.getSnapshotFeature(id);
+    if (!request) {
+      terra.removeFeatures([id]);
+      return fail(INVALID_REQUEST);
+    }
+    if (mode === 'polygon') {
+      terra.removeFeatures([id]);
+      addExclusion(feature.geometry.coordinates[0].map(round6));
+    } else if (mode === 'linestring') {
+      addCostLine(id, feature.geometry.coordinates);
+    }
+  });
 });
 
 // The numbered waypoints, straight from the request.
@@ -1234,14 +1413,21 @@ for (const option of OPTIONS) {
 $('costings').replaceChildren(...COSTING_OPTIONS.types.map((value) => el('option', { value })));
 
 map.on('click', (e) => {
+  // terra-draw has this click
+  if (drawMode) return;
   if (e.originalEvent.target.closest?.('.input-marker')) return;
   // this click only dismisses the popup
   if (popup?.isOpen()) return popup.remove();
-  // results that can be inspected take the click; anywhere else it adds a waypoint
-  const [feature] = map.queryRenderedFeatures(e.point, { layers: ['waypoints', 'intersections', 'nodes', 'edges'] });
+  if (factorPopup?.isOpen()) return factorPopup.remove();
+  // results that can be inspected take the click, then the cost lines underneath; anywhere else it adds a waypoint
+  const [feature] = [
+    ...map.queryRenderedFeatures(e.point, { layers: ['waypoints', 'intersections', 'nodes', 'edges'] }),
+    ...map.queryRenderedFeatures(e.point, { layers: ['cost-lines'] }),
+  ];
   if (feature) {
     const { idx, i } = feature.properties;
     const at = feature.geometry.coordinates;
+    if (feature.layer.id === 'cost-lines') return openFactorPopup(i, e.lngLat);
     if (feature.layer.id === 'waypoints') return showPopup(`waypoint ${i}`, state.data.waypoints[i], at);
     if (feature.layer.id === 'intersections') return showPopup(`step ${idx} · intersection ${i}`, steps[idx].step.intersections[i], at);
     if (feature.layer.id === 'nodes') return showPopup(`edge ${idx} · end_node`, edges[idx].node, at);
@@ -1254,7 +1440,15 @@ map.on('click', (e) => {
 map.on('contextmenu', (e) => {
   e.originalEvent.preventDefault();
   if (!request) return fail(INVALID_REQUEST);
-  openMapMenu(e);
+  const [polygon] = map.queryRenderedFeatures(e.point, { layers: ['exclusions-fill'] });
+  if (polygon) return openMenu(e.originalEvent, 'Exclude polygon', [{ label: 'Delete', danger: true, action: () => deleteExclusions(polygon.properties.i) }]);
+  if (!drawMode) openMapMenu(e);
+});
+drawPolygonEl.addEventListener('click', () => setDrawMode('polygon'));
+drawLineEl.addEventListener('click', () => setDrawMode('linestring'));
+deletePolygonsEl.addEventListener('click', () => {
+  if (!request) return fail(INVALID_REQUEST);
+  deleteExclusions();
 });
 map.on('movestart', closeMenu);
 document.addEventListener('keydown', (e) => e.key === 'Escape' && closeMenu());

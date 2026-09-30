@@ -110,6 +110,18 @@
     .menu button { padding: 4px 8px; border: 0; border-radius: 4px; background: none; text-align: left; cursor: pointer; }
     .menu button:hover { background: #f3f4f6; }
     .menu button.danger { color: #b91c1c; }
+
+    .draw-tools { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+    .draw-tools button { padding: 4px 10px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; box-shadow: 0 1px 3px rgb(0 0 0 / 0.2); cursor: pointer; }
+    .draw-tools button:hover { background: #f3f4f6; }
+    .draw-tools button.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+    .draw-tools button.danger { color: #b91c1c; }
+    .draw-tools button[hidden] { display: none; }
+    .factor-label { padding: 0 5px; background: #fff; border: 1px solid #7c3aed; border-radius: 9px; font: 600 11px/1.4 ui-monospace, monospace; white-space: nowrap; cursor: pointer; box-shadow: 0 1px 3px rgb(0 0 0 / 0.3); }
+    .factor-popup { display: flex; gap: 6px; align-items: end; }
+    .factor-popup label { font: 11px/1.4 ui-monospace, monospace; }
+    .factor-popup input { display: block; width: 90px; margin-top: 1px; padding: 2px 6px; border: 1px solid #d1d5db; border-radius: 6px; font: 12px/1.4 system-ui, sans-serif; }
+    .factor-popup .danger { color: #b91c1c; }
   </style>
 </head>
 <body>
@@ -130,7 +142,7 @@
       <input id="costing" list="costings" placeholder="costing" title="costing" spellcheck="false">
       <datalist id="costings"></datalist>
     </div>
-    <div id="hint">Click the map to append a waypoint, right-click to insert one elsewhere. Drag a waypoint to move it, right-click it to delete or reorder it. Always sent with <code>format: osrm</code>.</div>
+    <div id="hint">Click the map to append a waypoint, right-click to insert one elsewhere. Drag a waypoint to move it, right-click it to delete or reorder it. The buttons on the map draw exclude polygons and cost lines instead. Always sent with <code>format: osrm</code>.</div>
     <div id="error"></div>
     <div id="status"></div>
 
@@ -197,6 +209,8 @@
   </dialog>
 
   <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/terra-draw@1/dist/terra-draw.umd.js"></script>
+  <script src="https://unpkg.com/terra-draw-maplibre-gl-adapter@1/dist/terra-draw-maplibre-gl-adapter.umd.js"></script>
   <script src="costing-options.js"></script>
   <script src="index.js"></script>
 </body>
