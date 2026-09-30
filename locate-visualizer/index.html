@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Locate visualizer</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; height: 100vh; display: flex; font: 13px/1.4 system-ui, sans-serif; color: #1f2937; }
+    button, input, select { font: inherit; }
+    #panel { width: 380px; flex: none; display: flex; flex-direction: column; border-right: 1px solid #d1d5db; background: #fff; }
+    #map { flex: 1; }
+
+    #servers, #add-server, #actions, #save-view { flex: none; display: flex; gap: 6px; align-items: center; margin: 10px 10px 0; }
+    #add-server { margin-top: 6px; }
+    #server, #server-url, #costing, #view-name { flex: 1; min-width: 0; }
+    #server-url, #costing, #view-name, #options input, #options select { padding: 3px 6px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; }
+
+    #input { height: 190px; flex: none; margin: 10px 10px 0; padding: 8px; resize: vertical; border: 1px solid #d1d5db; border-radius: 6px; font: 11px/1.4 ui-monospace, monospace; }
+    #hint { margin: 8px 10px 0; color: #6b7280; }
+    #error, #status { margin: 8px 10px 0; }
+    #error { color: #b91c1c; }
+    #status { color: #6b7280; font-variant-numeric: tabular-nums; }
+    #error:empty, #status:empty { display: none; }
+
+    #scroll { flex: 1; min-height: 0; overflow-y: auto; margin-top: 10px; border-top: 1px solid #e5e7eb; }
+    #options > summary { padding: 6px 10px; background: #f3f4f6; font-weight: 600; cursor: pointer; }
+    #options > summary small { color: #6b7280; font-weight: 400; }
+    #fields { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; padding: 8px 10px 10px; }
+    #fields .group { grid-column: 1 / -1; margin-top: 2px; color: #6b7280; font: 600 11px/1.4 ui-monospace, monospace; }
+    #fields label { min-width: 0; font: 11px/1.4 ui-monospace, monospace; }
+    #fields input, #fields select { display: block; width: 100%; margin-top: 1px; font: 12px/1.4 system-ui, sans-serif; }
+
+    #display { display: flex; gap: 6px; justify-content: space-between; align-items: center; padding: 6px 10px; border-top: 1px solid #e5e7eb; }
+
+    #results { margin: 0; padding: 0; list-style: none; }
+    #results .location { position: sticky; top: 0; display: flex; gap: 6px; align-items: center; padding: 6px 10px; background: #f3f4f6; font-weight: 600; }
+    #results .location small { color: #6b7280; font-weight: 400; }
+    #results .dot { width: 10px; height: 10px; flex: none; border-radius: 50%; }
+    #results .row { border-bottom: 1px solid #f3f4f6; border-left: 4px solid; }
+    #results .row.active { background: #fef9c3; }
+    #results .row summary { padding: 6px 10px 6px 8px; cursor: pointer; }
+    #results .row summary small { display: block; color: #6b7280; font-variant-numeric: tabular-nums; }
+    #results .row pre { margin: 0; padding: 6px 10px 8px 8px; overflow-x: auto; font: 11px/1.5 ui-monospace, monospace; }
+
+    #saved-views { flex: none; padding-bottom: 10px; border-top: 1px solid #e5e7eb; }
+    #views { display: flex; flex-wrap: wrap; gap: 6px; max-height: 84px; overflow-y: auto; margin: 8px 10px 0; }
+    #views:empty { display: none; }
+    #views .view { display: flex; max-width: 100%; }
+    #views button { padding: 1px 6px; border: 1px solid #d1d5db; background: #f3f4f6; cursor: pointer; }
+    #views button:hover { background: #e5e7eb; }
+    #views button:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 6px 0 0 6px; }
+    #views button:last-child { flex: none; border-left: 0; border-radius: 0 6px 6px 0; color: #6b7280; }
+
+    .input-marker { width: 22px; height: 22px; background: #fff; border: 3px solid; border-radius: 50%; font: 700 11px/16px ui-monospace, monospace; text-align: center; cursor: grab; box-shadow: 0 1px 3px rgb(0 0 0 / 0.4); }
+  </style>
+</head>
+<body>
+  <aside id="panel">
+    <div id="servers">
+      <select id="server" title="Valhalla server"></select>
+      <button id="remove-server" type="button" title="Forget this server">Remove</button>
+    </div>
+    <form id="add-server">
+      <input id="server-url" placeholder="Add a server, e.g. localhost:8002" spellcheck="false">
+      <button type="submit">Add</button>
+    </form>
+
+    <textarea id="input" spellcheck="false" placeholder="The /locate request JSON…"></textarea>
+    <div id="actions">
+      <button id="send" type="button" title="Ctrl+Enter">Send</button>
+      <button id="clear" type="button">Clear points</button>
+      <input id="costing" list="costings" placeholder="costing" title="costing" spellcheck="false">
+      <datalist id="costings">
+        <option value="auto"></option>
+        <option value="bicycle"></option>
+        <option value="bus"></option>
+        <option value="motor_scooter"></option>
+        <option value="motorcycle"></option>
+        <option value="pedestrian"></option>
+        <option value="taxi"></option>
+        <option value="truck"></option>
+      </datalist>
+      <label><input id="verbose" type="checkbox"> verbose</label>
+    </div>
+    <div id="hint">Click the map to locate that point. Right-click to add points, then Send. Drag a point to move it, right-click it to remove it.</div>
+    <div id="error"></div>
+    <div id="status"></div>
+
+    <div id="scroll">
+      <details id="options" open>
+        <summary>Location options <small>— set on every location; empty uses the server default</small></summary>
+        <div id="fields"></div>
+      </details>
+      <div id="display">
+        <label title="Only verbose responses have bounding circles"><input id="circles" type="checkbox"> bounding circle of the hovered edge</label>
+        <button id="copy" type="button" disabled>Copy response</button>
+      </div>
+      <ul id="results"></ul>
+    </div>
+
+    <div id="saved-views">
+      <div id="views"></div>
+      <form id="save-view">
+        <input id="view-name" placeholder="Save this map view as, e.g. San Francisco" spellcheck="false">
+        <button type="submit">Save</button>
+      </form>
+    </div>
+  </aside>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>
