@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Attributes controller builder</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0 auto; max-width: 960px; height: 100vh; padding: 10px; display: flex; flex-direction: column; gap: 10px; font: 13px/1.4 system-ui, sans-serif; color: #1f2937; }
+    button, input { font: inherit; }
+
+    #lists { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .column { min-height: 0; display: flex; flex-direction: column; border: 1px solid #d1d5db; border-radius: 6px; overflow: hidden; }
+    .column header { display: flex; gap: 8px; align-items: center; padding: 8px 10px; border-bottom: 1px solid #e5e7eb; }
+    .column header b { flex: none; }
+    .column header small { color: #6b7280; }
+    #filter { flex: 1; min-width: 0; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 6px; }
+    #action { flex: 1; display: flex; gap: 10px; justify-content: flex-end; }
+
+    .attributes { flex: 1; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
+    .attributes:empty::before { display: block; padding: 10px; color: #6b7280; content: attr(data-empty); }
+    .attributes .group { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 4px 10px; background: #f3f4f6; font-weight: 600; }
+    .attributes .group button { padding: 0 6px; font-size: 12px; }
+    .attributes .attribute { display: flex; justify-content: space-between; gap: 8px; padding: 4px 10px; border-bottom: 1px solid #f3f4f6; font-family: ui-monospace, monospace; font-size: 12px; cursor: pointer; user-select: none; }
+    .attributes .attribute:hover { background: #fef9c3; }
+    .attributes .attribute.marked { background: #dbeafe; }
+    .attributes .attribute.marked:hover { background: #bfdbfe; }
+    .attributes .attribute small { flex: none; color: #6b7280; font-family: system-ui, sans-serif; }
+
+    #result { flex: none; display: flex; gap: 10px; align-items: flex-start; }
+    #output { flex: 1; height: 160px; padding: 8px; resize: vertical; border: 1px solid #d1d5db; border-radius: 6px; font: 11px/1.4 ui-monospace, monospace; }
+  </style>
+</head>
+<body>
+  <div id="lists">
+    <section class="column">
+      <header>
+        <b>Available</b>
+        <input id="filter" type="search" placeholder="Filter, or type a custom attribute and press Enter" autofocus>
+      </header>
+      <ul id="available" class="attributes" data-empty="Nothing matches."></ul>
+    </section>
+    <section class="column">
+      <header>
+        <b>Selected</b>
+        <small id="count"></small>
+        <div id="action">
+          <label><input type="radio" name="action" value="include"> include</label>
+          <label><input type="radio" name="action" value="exclude"> exclude</label>
+        </div>
+      </header>
+      <ul id="selected" class="attributes" data-empty="Click attributes on the left to add them. Ctrl+click or Shift+click marks several; clicking a marked one moves them all."></ul>
+    </section>
+  </div>
+  <div id="result">
+    <textarea id="output" readonly spellcheck="false"></textarea>
+    <button id="copy" type="button">Copy</button>
+  </div>
+
+  <script src="index.js"></script>
+</body>
+</html>
