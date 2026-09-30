@@ -90,6 +90,61 @@
         color: #374151;
         font-size: 13px;
       }
+
+      .ootd {
+        padding: 14px 16px;
+        border: 1px solid #d1d5db;
+        border-left: 4px solid #2563eb;
+        border-radius: 6px;
+      }
+      .ootd-head code {
+        font:
+          600 15px/1.4 ui-monospace,
+          monospace;
+      }
+      .ootd-badge {
+        margin-left: 6px;
+        padding: 1px 6px;
+        border-radius: 4px;
+        background: #fef3c7;
+        color: #92400e;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .ootd-scope,
+      .ootd-source {
+        display: block;
+        color: #6b7280;
+      }
+      .ootd-changes {
+        margin: 8px 0 0;
+        padding-left: 18px;
+        color: #92400e;
+        list-style: disc;
+      }
+      .ootd dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2px 12px;
+        margin: 10px 0;
+      }
+      .ootd dt {
+        color: #6b7280;
+      }
+      .ootd dd {
+        margin: 0;
+        font-family: ui-monospace, monospace;
+        overflow-wrap: anywhere;
+      }
+      .ootd p {
+        margin: 0 0 8px;
+        color: inherit;
+      }
+      .ootd p code {
+        padding: 0 3px;
+        border-radius: 3px;
+        background: #f3f4f6;
+      }
     </style>
   </head>
   <body>
@@ -122,5 +177,19 @@
         </a>
       </li>
     </ul>
+
+    <!-- option-of-the-day:start -->
+    <section id="option-of-the-day" data-option="Location.preferred_side">
+      <h2>Costing option of the day</h2>
+      <div class="ootd">
+        <div class="ootd-head"><code>preferred_side</code></div>
+        <small class="ootd-scope">location option</small>
+        
+        <dl><dt>type</dt><dd>string</dd><dt>default</dt><dd>either</dd><dt>min</dt><dd>–</dd><dt>max</dt><dd>–</dd><dt>values</dt><dd>same, opposite, either</dd></dl>
+        <p>Preferred side of road to snap to.</p>
+        <small class="ootd-source">2026-09-30 · valhalla@685e3d814</small>
+      </div>
+    </section>
+    <!-- option-of-the-day:end -->
   </body>
 </html>

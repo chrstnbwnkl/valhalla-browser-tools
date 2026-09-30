@@ -2,3 +2,4 @@
 exclude:
   - README.md
   - route-playground/generate-costing-options.py
+  - scripts
