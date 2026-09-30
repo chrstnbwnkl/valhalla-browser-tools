@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Route debugger</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; height: 100vh; display: flex; font: 13px/1.4 system-ui, sans-serif; color: #1f2937; }
+    button, input, select { font: inherit; }
+    #panel { width: 400px; flex: none; display: flex; flex-direction: column; border-right: 1px solid #d1d5db; background: #fff; }
+    #map { flex: 1; }
+
+    #servers, #add-server, #actions, #save-view { flex: none; display: flex; gap: 6px; align-items: center; margin: 10px 10px 0; }
+    #add-server { margin-top: 6px; }
+    #server, #server-url, #costing, #view-name { flex: 1; min-width: 0; }
+    #server-url, #costing, #view-name, .fields input, .fields select { padding: 3px 6px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; }
+
+    #input { height: 150px; flex: none; margin: 10px 10px 0; padding: 8px; resize: vertical; border: 1px solid #d1d5db; border-radius: 6px; font: 11px/1.4 ui-monospace, monospace; }
+    #hint { margin: 8px 10px 0; color: #6b7280; }
+    #error, #status { margin: 8px 10px 0; }
+    #error { color: #b91c1c; }
+    #status { color: #6b7280; font-variant-numeric: tabular-nums; }
+    #error:empty, #status:empty { display: none; }
+
+    #scroll { flex: 1; min-height: 0; overflow-y: auto; margin-top: 10px; border-top: 1px solid #e5e7eb; }
+    .options { border-bottom: 1px solid #e5e7eb; }
+    .options > summary { padding: 6px 10px; background: #f3f4f6; font-weight: 600; cursor: pointer; }
+    .options > summary small { color: #6b7280; font-weight: 400; }
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; padding: 8px 10px 10px; }
+    .fields .group { grid-column: 1 / -1; margin-top: 2px; color: #6b7280; font: 600 11px/1.4 ui-monospace, monospace; }
+    .fields label { min-width: 0; font: 11px/1.4 ui-monospace, monospace; }
+    .fields input, .fields select { display: block; width: 100%; margin-top: 1px; font: 12px/1.4 system-ui, sans-serif; }
+
+    #result[hidden] { display: none; }
+    #routes { display: block; width: calc(100% - 20px); margin: 10px 10px 0; }
+    #routes[hidden] { display: none; }
+    #summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 10px 0; }
+    #summary div { padding: 6px 8px; background: #f3f4f6; border-radius: 6px; }
+    #summary small { display: block; color: #6b7280; }
+    #summary b { font-variant-numeric: tabular-nums; }
+    #copies { display: flex; gap: 6px; align-items: center; margin: 8px 10px; color: #6b7280; }
+
+    #steps { margin: 0; padding: 0; list-style: none; border-top: 1px solid #e5e7eb; }
+    #steps .leg { position: sticky; top: 0; padding: 6px 10px; background: #f3f4f6; font-weight: 600; }
+    #steps .leg .bad { color: #b91c1c; }
+    #steps .leg .ok { color: #15803d; font-weight: 400; }
+    #steps .step { display: flex; gap: 8px; padding: 6px 10px 6px 0; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
+    #steps .step.active { background: #fef9c3; }
+    .swatch { width: 4px; flex: none; border-radius: 0 2px 2px 0; }
+    .instr { flex: 1; min-width: 0; }
+    .instr small { display: block; color: #6b7280; }
+    .metrics { flex: none; text-align: right; font-variant-numeric: tabular-nums; }
+    .metrics small { display: block; color: #6b7280; }
+    .metrics .turns { color: #b91c1c; }
+    .metrics .turns:empty { display: none; }
+
+    #saved-views { flex: none; padding-bottom: 10px; border-top: 1px solid #e5e7eb; }
+    #views { display: flex; flex-wrap: wrap; gap: 6px; max-height: 84px; overflow-y: auto; margin: 8px 10px 0; }
+    #views:empty { display: none; }
+    #views .view { display: flex; max-width: 100%; }
+    #views button { padding: 1px 6px; border: 1px solid #d1d5db; background: #f3f4f6; cursor: pointer; }
+    #views button:hover { background: #e5e7eb; }
+    #views button:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 6px 0 0 6px; }
+    #views button:last-child { flex: none; border-left: 0; border-radius: 0 6px 6px 0; color: #6b7280; }
+
+    .input-marker { width: 22px; height: 22px; background: #111827; color: #fff; border: 2px solid #fff; border-radius: 50%; font: 700 11px/18px ui-monospace, monospace; text-align: center; cursor: grab; box-shadow: 0 1px 3px rgb(0 0 0 / 0.4); }
+    .step-label { padding: 1px 5px; background: #fff; border: 2px solid; border-radius: 4px; font: 600 12px/1.3 ui-monospace, monospace; white-space: nowrap; cursor: pointer; box-shadow: 0 1px 3px rgb(0 0 0 / 0.3); }
+    .step-label.active { background: #fef9c3; z-index: 1; }
+    .turn-label { padding: 0 4px; background: #fef2f2; color: #b91c1c; border: 1px solid #dc2626; border-radius: 4px; font: 600 11px/1.3 ui-monospace, monospace; white-space: nowrap; cursor: pointer; box-shadow: 0 1px 3px rgb(0 0 0 / 0.3); }
+    .maplibregl-popup-content pre { margin: 0; font: 11px/1.5 ui-monospace, monospace; }
+
+    .menu-backdrop { position: fixed; inset: 0; z-index: 10; }
+    .menu { position: fixed; display: flex; flex-direction: column; min-width: 170px; max-height: 60vh; overflow-y: auto; padding: 4px; background: #fff; border: 1px solid #d1d5db; border-radius: 6px; box-shadow: 0 4px 12px rgb(0 0 0 / 0.25); }
+    .menu b { padding: 3px 8px; color: #6b7280; font-size: 11px; }
+    .menu button { padding: 4px 8px; border: 0; border-radius: 4px; background: none; text-align: left; cursor: pointer; }
+    .menu button:hover { background: #f3f4f6; }
+    .menu button.danger { color: #b91c1c; }
+  </style>
+</head>
+<body>
+  <aside id="panel">
+    <div id="servers">
+      <select id="server" title="Valhalla server"></select>
+      <button id="remove-server" type="button" title="Forget this server">Remove</button>
+    </div>
+    <form id="add-server">
+      <input id="server-url" placeholder="Add a server, e.g. localhost:8002" spellcheck="false">
+      <button type="submit">Add</button>
+    </form>
+
+    <textarea id="input" spellcheck="false" placeholder="The /route request JSON…"></textarea>
+    <div id="actions">
+      <button id="send" type="button" title="Ctrl+Enter">Send</button>
+      <button id="clear" type="button">Clear points</button>
+      <input id="costing" list="costings" placeholder="costing" title="costing" spellcheck="false">
+      <datalist id="costings"></datalist>
+    </div>
+    <div id="hint">Click the map to append a waypoint, right-click to insert one elsewhere. Drag a waypoint to move it, right-click it to delete or reorder it. Always sent with <code>format: osrm</code>.</div>
+    <div id="error"></div>
+    <div id="status"></div>
+
+    <div id="scroll">
+      <details class="options">
+        <summary>Location options <small>— set on every location</small></summary>
+        <div id="fields" class="fields"></div>
+      </details>
+      <details class="options">
+        <summary>Costing options <small id="costing-note"></small></summary>
+        <div id="costing-fields" class="fields"></div>
+      </details>
+      <div id="result" hidden>
+        <select id="routes" hidden></select>
+        <div id="summary"></div>
+        <div id="copies">
+          Copy
+          <button id="copy" type="button">response</button>
+          <button id="copy-trace" type="button" title="A trace_attributes request that edge-walks the shape of this route">trace_attributes</button>
+        </div>
+        <ol id="steps"></ol>
+      </div>
+    </div>
+
+    <div id="saved-views">
+      <div id="views"></div>
+      <form id="save-view">
+        <input id="view-name" placeholder="Save this map view as, e.g. San Francisco" spellcheck="false">
+        <button type="submit">Save</button>
+      </form>
+    </div>
+  </aside>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+  <script src="costing-options.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>

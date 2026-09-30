@@ -1,0 +1,4 @@
+# GitHub Pages builds this repository with Jekyll; keep files that aren't part of the site out of it
+exclude:
+  - README.md
+  - route-debugger/generate-costing-options.py
