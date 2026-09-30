@@ -11,8 +11,15 @@ const STYLE = {
   },
   layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
 };
-const STORAGE_KEY = 'locate-visualizer:servers';
-const VIEWS_KEY = 'locate-visualizer:views';
+// the servers added by hand, shared by the tools like the saved views
+const SERVERS_KEY = 'valhalla-browser-tools:servers';
+// which server this tool uses; before the added servers were shared, it held this tool's own as well
+const SELECTED_SERVER_KEY = 'locate-visualizer:servers';
+const LEGACY_SERVER_KEYS = ['locate-visualizer:servers', 'route-debugger:servers'];
+// shared by the tools, so a view saved in one of them is there in the others
+const VIEWS_KEY = 'valhalla-browser-tools:views';
+// where the tools kept their views before
+const LEGACY_VIEWS_KEYS = ['locate-visualizer:views', 'route-debugger:views'];
 const PRESET_SERVERS = ['https://valhalla1.openstreetmap.de', 'http://localhost:8002'];
 // the request travels in this URL parameter, the same one Valhalla itself accepts on GET requests
 const URL_PARAM = 'json';
@@ -179,13 +186,20 @@ function normalizeServer(text) {
 }
 
 function restoreServers() {
+  const custom = (list) => (Array.isArray(list) ? list.filter((url) => typeof url === 'string' && !PRESET_SERVERS.includes(url)) : []);
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (Array.isArray(saved?.custom)) servers.custom = saved.custom.filter((url) => typeof url === 'string' && !PRESET_SERVERS.includes(url));
-    if (allServers().includes(saved?.selected)) servers.selected = saved.selected;
+    const shared = localStorage.getItem(SERVERS_KEY);
+    // nothing shared yet: start from the servers the tools added on their own
+    servers.custom = shared !== null
+      ? custom(JSON.parse(shared))
+      : [...new Set(LEGACY_SERVER_KEYS.flatMap((key) => custom(JSON.parse(localStorage.getItem(key))?.custom)))];
+    const { selected } = JSON.parse(localStorage.getItem(SELECTED_SERVER_KEY)) ?? {};
+    if (allServers().includes(selected)) servers.selected = selected;
   } catch {
     // storage unavailable or corrupt
   }
+  // the server in use was removed, in another tab
+  if (!allServers().includes(servers.selected)) servers.selected = PRESET_SERVERS[0];
 }
 
 function selectServer(url) {
@@ -196,7 +210,8 @@ function selectServer(url) {
 
 function updateServers() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(servers));
+    localStorage.setItem(SERVERS_KEY, JSON.stringify(servers.custom));
+    localStorage.setItem(SELECTED_SERVER_KEY, JSON.stringify({ selected: servers.selected }));
   } catch {
     // storage unavailable
   }
@@ -208,9 +223,22 @@ function updateServers() {
 // --- saved views ------------------------------------------------------------
 
 function restoreViews() {
+  const read = (key) => {
+    const saved = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(saved) ? saved.filter((view) => typeof view?.name === 'string' && Array.isArray(view.center) && Number.isFinite(view.zoom)) : [];
+  };
   try {
-    const saved = JSON.parse(localStorage.getItem(VIEWS_KEY));
-    if (Array.isArray(saved)) views = saved.filter((view) => typeof view?.name === 'string' && Array.isArray(view.center) && Number.isFinite(view.zoom));
+    if (localStorage.getItem(VIEWS_KEY) !== null) {
+      views = read(VIEWS_KEY);
+      return;
+    }
+    // nothing shared yet: start from what the tools saved on their own, the first of a name wins
+    views = [];
+    for (const key of LEGACY_VIEWS_KEYS) {
+      for (const view of read(key)) {
+        if (!views.some((other) => other.name === view.name)) views.push(view);
+      }
+    }
   } catch {
     // storage unavailable or corrupt
   }
@@ -648,7 +676,19 @@ saveViewEl.addEventListener('submit', (e) => {
 
 restoreServers();
 updateServers();
+// keep up with servers added or removed in other tabs, of this tool or another one
+window.addEventListener('storage', (e) => {
+  if (e.key !== SERVERS_KEY) return;
+  restoreServers();
+  updateServers();
+});
 restoreViews();
+// keep up with views saved in other tabs, of this tool or another one
+window.addEventListener('storage', (e) => {
+  if (e.key !== VIEWS_KEY) return;
+  restoreViews();
+  updateViews();
+});
 updateViews();
 
 const shared = new URLSearchParams(location.search).get(URL_PARAM);
