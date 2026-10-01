@@ -1316,6 +1316,11 @@ function openMapMenu(e) {
   const { lng, lat } = e.lngLat.wrap();
   const lonLat = `${lng.toFixed(6)},${lat.toFixed(6)}`;
   items.push({ label: `Copy ${lonLat}`, action: () => copyText(lonLat) });
+  items.push({
+    label: "Copy as Valhalla location",
+    action: () =>
+      copyText(JSON.stringify(newLocation(e.lngLat.wrap()), null, 2)),
+  });
   openMenu(e.originalEvent, "New waypoint", items);
 }
 
