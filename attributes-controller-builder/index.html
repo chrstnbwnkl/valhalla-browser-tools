@@ -4,57 +4,58 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Attributes controller builder</title>
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <link rel="stylesheet" href="../assets/waypoint.css">
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0 auto; max-width: 960px; height: 100vh; padding: 10px; display: flex; flex-direction: column; gap: 10px; font: 13px/1.4 system-ui, sans-serif; color: #1f2937; }
-    button, input { font: inherit; }
+    body { max-width: 1120px; height: 100vh; margin: 0 auto; padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); }
 
-    #lists { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .column { min-height: 0; display: flex; flex-direction: column; border: 1px solid #d1d5db; border-radius: 6px; overflow: hidden; }
-    .column header { display: flex; gap: 8px; align-items: center; padding: 8px 10px; border-bottom: 1px solid #e5e7eb; }
+    #lists { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    .column { min-height: 0; display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+    .column header { display: flex; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-bottom: var(--border-hair) solid var(--line); }
     .column header b { flex: none; }
-    .column header small { color: #6b7280; }
-    #filter { flex: 1; min-width: 0; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 6px; }
-    #action { flex: 1; display: flex; gap: 10px; justify-content: flex-end; }
+    .column header small { color: var(--ink-muted); }
+    #filter { flex: 1; min-width: 0; }
+    #action { flex: 1; display: flex; gap: var(--space-4); justify-content: flex-end; }
+    #action label { display: flex; gap: var(--space-1); align-items: center; cursor: pointer; }
+    #action input { margin: 0; accent-color: var(--green); }
 
     .attributes { flex: 1; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
-    .attributes:empty::before { display: block; padding: 10px; color: #6b7280; content: attr(data-empty); }
-    .attributes .group { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 4px 10px; background: #f3f4f6; font-weight: 600; }
-    .attributes .group button { padding: 0 6px; font-size: 12px; }
-    .attributes .attribute { display: flex; justify-content: space-between; gap: 8px; padding: 4px 10px; border-bottom: 1px solid #f3f4f6; font-family: ui-monospace, monospace; font-size: 12px; cursor: pointer; user-select: none; }
-    .attributes .attribute:hover { background: #fef9c3; }
-    .attributes .attribute.marked { background: #dbeafe; }
-    .attributes .attribute.marked:hover { background: #bfdbfe; }
-    .attributes .attribute small { flex: none; color: #6b7280; font-family: system-ui, sans-serif; }
+    .attributes:empty::before { display: block; padding: var(--space-4); color: var(--ink-muted); content: attr(data-empty); }
+    .attributes .group { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; padding: var(--space-1) var(--space-2) var(--space-1) var(--space-4); background: var(--surface-sunken); }
+    .attributes .attribute { display: flex; justify-content: space-between; gap: var(--space-2); padding: var(--space-1) var(--space-4); border-bottom: var(--border-hair) solid var(--line); cursor: pointer; user-select: none; }
+    .attributes .attribute:hover { background: var(--surface-sunken); }
+    .attributes .attribute.marked { background: var(--magenta-soft); color: var(--magenta-ink); }
+    .attributes .attribute small { flex: none; color: var(--ink-muted); font-family: var(--font-sans); }
 
-    #result { flex: none; display: flex; gap: 10px; align-items: flex-start; }
-    #output { flex: 1; height: 160px; padding: 8px; resize: vertical; border: 1px solid #d1d5db; border-radius: 6px; font: 11px/1.4 ui-monospace, monospace; }
+    #result { flex: none; display: flex; gap: var(--space-3); align-items: flex-start; }
+    #output { flex: 1; height: 160px; padding: var(--space-3); resize: vertical; }
   </style>
 </head>
 <body>
   <div id="lists">
-    <section class="column">
+    <section class="column wp-card">
       <header>
-        <b>Available</b>
-        <input id="filter" type="search" placeholder="Filter, or type a custom attribute and press Enter" autofocus>
+        <b class="label">Available</b>
+        <input id="filter" class="wp-input" type="search" placeholder="Filter, or type a custom attribute and press Enter" autofocus>
       </header>
-      <ul id="available" class="attributes" data-empty="Nothing matches."></ul>
+      <ul id="available" class="attributes code" data-empty="Nothing matches."></ul>
     </section>
-    <section class="column">
+    <section class="column wp-card">
       <header>
-        <b>Selected</b>
-        <small id="count"></small>
-        <div id="action">
+        <b class="label">Selected</b>
+        <small id="count" class="caption"></small>
+        <div id="action" class="caption">
           <label><input type="radio" name="action" value="include"> include</label>
           <label><input type="radio" name="action" value="exclude"> exclude</label>
         </div>
       </header>
-      <ul id="selected" class="attributes" data-empty="Click attributes on the left to add them. Ctrl+click or Shift+click marks several; clicking a marked one moves them all."></ul>
+      <ul id="selected" class="attributes code" data-empty="Click attributes on the left to add them. Ctrl+click or Shift+click marks several; clicking a marked one moves them all."></ul>
     </section>
   </div>
   <div id="result">
-    <textarea id="output" readonly spellcheck="false"></textarea>
-    <button id="copy" type="button">Copy</button>
+    <textarea id="output" class="wp-input wp-input--mono" readonly spellcheck="false"></textarea>
+    <button id="copy" class="wp-btn wp-btn--primary" type="button">Copy</button>
   </div>
 
   <script src="index.js"></script>

@@ -1,0 +1,135 @@
+/* Waypoint tokens — generated from tokens.json. Load before waypoint.css. */
+
+@font-face { font-family: 'Bricolage Grotesque'; src: url('fonts/BricolageGrotesque-Variable.woff2') format('woff2'); font-weight: 200 800; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Manrope'; src: url('fonts/Manrope-Variable.woff2') format('woff2'); font-weight: 200 800; font-style: normal; font-display: swap; }
+@font-face { font-family: 'JetBrains Mono'; src: url('fonts/JetBrainsMono-Variable.woff2') format('woff2'); font-weight: 100 800; font-style: normal; font-display: swap; }
+
+/* Paper (light) — default */
+:root, [data-theme="light"] {
+  color-scheme: light;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-sunken: #f2f2f2;
+  --line: #e3e3e3;
+  --line-strong: #767676;
+  --ink: #0a0a0a;
+  --ink-muted: #4a4a4a;
+  --ink-subtle: #767676;
+  --green: #2bbc8a;
+  --on-green: #000000;
+  --green-ink: #0b7a55;
+  --green-soft: #dcf5ec;
+  --magenta: #e0007a;
+  --on-magenta: #ffffff;
+  --magenta-ink: #c4006a;
+  --magenta-soft: #fde2f0;
+  --blue: #1a5fd0;
+  --blue-soft: #e1ebfb;
+  --amber: #f5a600;
+  --amber-ink: #8a5a00;
+  --amber-soft: #fdf0cc;
+  --danger: #c41f16;
+  --danger-soft: #fbe2df;
+  --focus: var(--magenta);
+  --link: var(--green-ink);
+  --shadow-sm: 0 1px 2px #0000000f, 0 1px 3px #0000001a;
+  --shadow-float: 0 2px 4px #00000014, 0 12px 28px -6px #00000033;
+}
+
+/* Night (dark) — explicit */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: #0a0a0a;
+  --surface-raised: #171717;
+  --surface-sunken: #000000;
+  --line: #2b2b2b;
+  --line-strong: #8c8c8c;
+  --ink: #ffffff;
+  --ink-muted: #b8b8b8;
+  --ink-subtle: #8c8c8c;
+  --green: #2bbc8a;
+  --on-green: #000000;
+  --green-ink: #3fd29e;
+  --green-soft: #0a2e21;
+  --magenta: #ff3ba5;
+  --on-magenta: #000000;
+  --magenta-ink: #ff5cb4;
+  --magenta-soft: #3d0a26;
+  --blue: #6ea4ff;
+  --blue-soft: #0f2346;
+  --amber: #ffb81f;
+  --amber-ink: #ffc54a;
+  --amber-soft: #3a2900;
+  --danger: #ff6b5e;
+  --danger-soft: #3d1210;
+  --focus: var(--magenta);
+  --link: var(--green-ink);
+  --shadow-sm: 0 1px 2px #000000cc;
+  --shadow-float: 0 0 0 1px #2b2b2b, 0 12px 28px -6px #000000;
+}
+
+/* Night (dark) — follows the OS unless data-theme="light" is set */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface: #0a0a0a;
+    --surface-raised: #171717;
+    --surface-sunken: #000000;
+    --line: #2b2b2b;
+    --line-strong: #8c8c8c;
+    --ink: #ffffff;
+    --ink-muted: #b8b8b8;
+    --ink-subtle: #8c8c8c;
+    --green: #2bbc8a;
+    --on-green: #000000;
+    --green-ink: #3fd29e;
+    --green-soft: #0a2e21;
+    --magenta: #ff3ba5;
+    --on-magenta: #000000;
+    --magenta-ink: #ff5cb4;
+    --magenta-soft: #3d0a26;
+    --blue: #6ea4ff;
+    --blue-soft: #0f2346;
+    --amber: #ffb81f;
+    --amber-ink: #ffc54a;
+    --amber-soft: #3a2900;
+    --danger: #ff6b5e;
+    --danger-soft: #3d1210;
+    --focus: var(--magenta);
+    --link: var(--green-ink);
+    --shadow-sm: 0 1px 2px #000000cc;
+    --shadow-float: 0 0 0 1px #2b2b2b, 0 12px 28px -6px #000000;
+  }
+}
+
+:root {
+  --font-display: "Bricolage Grotesque", Manrope, system-ui, sans-serif;
+  --font-sans: Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-full: 9999px;
+  --border-hair: 1px;
+  --border-route: 4px;
+}
+
+/* Type styles */
+.display-xl { font-family: var(--font-display); font-size: 56px; line-height: 60px; font-weight: 750; letter-spacing: -0.025em; }
+.display { font-family: var(--font-display); font-size: 40px; line-height: 44px; font-weight: 700; letter-spacing: -0.02em; }
+.heading { font-family: var(--font-display); font-size: 26px; line-height: 32px; font-weight: 650; letter-spacing: -0.01em; }
+.subheading { font-family: var(--font-display); font-size: 20px; line-height: 28px; font-weight: 650; }
+.lead { font-family: var(--font-sans); font-size: 19px; line-height: 30px; font-weight: 500; }
+.body { font-family: var(--font-sans); font-size: 16px; line-height: 26px; font-weight: 500; }
+.label { font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 700; }
+.caption { font-family: var(--font-sans); font-size: 13px; line-height: 18px; font-weight: 500; }
+.stat { font-family: var(--font-mono); font-size: 28px; line-height: 32px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.code { font-family: var(--font-mono); font-size: 14px; line-height: 22px; font-weight: 400; }

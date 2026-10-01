@@ -133,10 +133,10 @@ function renderList(target, marks, pick, move, moveLabel) {
     const picked = names.filter(pick);
     if (!picked.length) return [];
     shown.push(...picked);
-    const button = el('button', { type: 'button', textContent: moveLabel });
+    const button = el('button', { type: 'button', className: 'wp-btn wp-btn--ghost wp-btn--sm', textContent: moveLabel });
     button.addEventListener('click', () => move(picked));
     return [
-      el('li', { className: 'group' }, groupName, button),
+      el('li', { className: 'group label' }, groupName, button),
       ...picked.map((name) => {
         const item = el('li', { className: 'attribute' }, name, DEFAULT_OFF.has(name) ? el('small', { textContent: 'off by default' }) : '');
         item.classList.toggle('marked', marks.marked.has(name));

@@ -4,247 +4,142 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Valhalla Browser Tools</title>
+    <link rel="stylesheet" href="assets/tokens.css" />
+    <link rel="stylesheet" href="assets/waypoint.css" />
     <style>
       * {
         box-sizing: border-box;
       }
-      body {
+      main {
+        max-width: 720px;
         margin: 0 auto;
-        max-width: 640px;
-        padding: 32px 16px;
-        font:
-          13px/1.4 system-ui,
-          sans-serif;
-        color: #1f2937;
+        padding: var(--space-12) var(--space-6);
       }
-      h1 {
-        margin: 0 0 4px;
-        font-size: 20px;
-      }
-      h2 {
-        margin: 24px 0 8px;
-        color: #6b7280;
-        font-size: 11px;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-      }
+      h1,
       p {
         margin: 0;
-        color: #6b7280;
+      }
+      .intro {
+        margin-top: var(--space-2);
+        color: var(--ink-muted);
+      }
+      h2.label {
+        margin: var(--space-12) 0 var(--space-3);
+        color: var(--ink-muted);
       }
       ul {
+        display: grid;
+        gap: var(--space-3);
         margin: 0;
         padding: 0;
         list-style: none;
       }
-      li a {
-        display: block;
-        margin-bottom: 8px;
-        padding: 10px 12px;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
+      .playgrounds {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+      a.wp-card {
+        display: grid;
+        gap: var(--space-1);
+        height: 100%;
         color: inherit;
         text-decoration: none;
+        transition: border-color 0.12s;
       }
-      li a:hover {
-        background: #f3f4f6;
+      a.wp-card:hover {
+        border-color: var(--ink);
       }
-      li small {
-        display: block;
-        color: #6b7280;
-      }
-
-      .playgrounds {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 10px;
-      }
-      .playgrounds li a {
-        height: 100%;
+      a.wp-card .wp-card-title {
         margin: 0;
-        padding: 16px;
-        border: 2px solid #2563eb;
-        border-radius: 8px;
-        background: #eff6ff;
       }
-      .playgrounds li a:hover {
-        background: #dbeafe;
-      }
-      .playgrounds li b {
-        display: block;
-        margin-bottom: 4px;
-        font-size: 16px;
-      }
-      .playgrounds li code {
-        display: inline-block;
-        margin-bottom: 8px;
-        padding: 0 6px;
-        border-radius: 4px;
-        background: #2563eb;
-        color: #fff;
-        font:
-          600 11px/1.6 ui-monospace,
-          monospace;
-      }
-      .playgrounds li small {
-        color: #374151;
-        font-size: 13px;
+      .tools a.wp-card {
+        padding: var(--space-4);
       }
 
       .ootd {
-        margin-top: 32px;
-        padding: 20px 22px 22px;
-        border: 1px solid #bfdbfe;
-        border-radius: 12px;
-        background: #eff6ff;
+        display: grid;
+        gap: var(--space-3);
+        margin-top: var(--space-12);
       }
-      .ootd-title {
-        margin: 0 0 14px;
-        color: #111827;
-        font:
-          italic 800 26px/1.2 Georgia,
-          'Times New Roman',
-          serif;
-        letter-spacing: 0;
-        text-transform: none;
+      .ootd .heading {
+        margin: 0 0 var(--space-1);
       }
       .ootd-name {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: var(--space-3);
         align-items: center;
-      }
-      .ootd-name code {
-        font:
-          700 20px/1.3 ui-monospace,
-          monospace;
         overflow-wrap: anywhere;
       }
-      .ootd-badge {
-        padding: 2px 8px;
-        border-radius: 999px;
-        background: #fef3c7;
-        color: #92400e;
-        font-size: 11px;
-        font-weight: 600;
+      /* the option itself, as an inverted block so it reads first */
+      .ootd-name code {
+        padding: var(--space-1) var(--space-3);
+        border-radius: var(--radius-md);
+        background: var(--ink);
+        color: var(--surface);
       }
       .ootd-scope {
-        margin-top: 4px;
-        color: #6b7280;
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        align-items: center;
+        color: var(--ink-muted);
       }
-      .ootd-kind {
-        margin-right: 6px;
-        padding: 1px 8px;
-        border-radius: 999px;
-        background: #2563eb;
-        color: #fff;
-        font-size: 11px;
-        font-weight: 600;
+      .ootd .wp-stats {
+        gap: var(--space-6);
       }
-      .ootd-changes {
-        margin: 12px 0 0;
-        padding: 8px 12px 8px 28px;
-        border-radius: 8px;
-        background: #fffbeb;
-        color: #92400e;
-        list-style: disc;
-      }
-      .ootd-description {
-        margin: 14px 0 0;
-        color: #1f2937;
-        font-size: 14px;
-        line-height: 1.55;
-      }
-      .ootd-description code {
-        padding: 0 4px;
-        border-radius: 4px;
-        background: #e5e7eb;
-        font-size: 12px;
-      }
-      .ootd-facts {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-        gap: 8px;
-        margin-top: 16px;
-      }
-      .ootd-facts div {
-        padding: 8px 10px;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        background: #fff;
-      }
-      .ootd-facts small {
-        display: block;
-        color: #6b7280;
-        font-size: 11px;
-      }
-      .ootd-facts b {
-        font:
-          600 14px/1.4 ui-monospace,
-          monospace;
+      .ootd .wp-stat .code {
         overflow-wrap: anywhere;
       }
       .ootd-values {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 10px;
-      }
-      .ootd-values {
+        gap: var(--space-2);
         align-items: center;
-      }
-      .ootd-values small {
-        color: #6b7280;
-        font-size: 11px;
-      }
-      .ootd-values code {
-        padding: 2px 8px;
-        border: 1px solid #d1d5db;
-        border-radius: 999px;
-        background: #fff;
-        font-size: 12px;
+        color: var(--ink-muted);
       }
     </style>
   </head>
   <body>
-    <h1>Valhalla Browser Tools</h1>
-    <p>Small browser-only tools for the power user.</p>
+    <main>
+      <h1 class="display">Valhalla Browser Tools</h1>
+      <p class="lead intro">Small browser-only tools for the power user.</p>
 
-    <h2>Playgrounds</h2>
-    <ul class="playgrounds">
-      <li>
-        <a href="route-playground/index.html">
-          <b>Route playground</b>
-        </a>
-      </li>
-      <li>
-        <a href="locate-playground/index.html">
-          <b>Locate playground</b>
-        </a>
-      </li>
-    </ul>
+      <h2 class="label">Playgrounds</h2>
+      <ul class="playgrounds">
+        <li>
+          <a class="wp-card" href="route-playground/index.html">
+            <b class="wp-card-title">Route playground</b>
+          </a>
+        </li>
+        <li>
+          <a class="wp-card" href="locate-playground/index.html">
+            <b class="wp-card-title">Locate playground</b>
+          </a>
+        </li>
+      </ul>
 
-    <h2>Miscellaneous</h2>
-    <ul>
-      <li>
-        <a href="attributes-controller-builder/index.html">
-          <b>Attributes controller builder</b>
-          <small
-            >Pick Valhalla attributes from a list and get the include or exclude
-            filter as JSON.</small
-          >
-        </a>
-      </li>
-    </ul>
+      <h2 class="label">Miscellaneous</h2>
+      <ul class="tools">
+        <li>
+          <a class="wp-card" href="attributes-controller-builder/index.html">
+            <b class="label">Attributes controller builder</b>
+            <small class="caption wp-card-meta"
+              >Pick Valhalla attributes from a list and get the include or exclude
+              filter as JSON.</small
+            >
+          </a>
+        </li>
+      </ul>
 
-    <!-- option-of-the-day:start -->
-    <section id="option-of-the-day" class="ootd" data-option="Transit.transfer_cost">
-      <h2 class="ootd-title">Option of the Day</h2>
-      <div class="ootd-name"><code>transfer_cost</code></div>
-      <div class="ootd-scope"><span class="ootd-kind">costing option</span>for multimodal, transit</div>
-      <p class="ootd-description">Time cost (seconds) per transfer. Influences ETA.</p>
-      <div class="ootd-facts"><div><small>type</small><b>number</b></div><div><small>default</small><b>15</b></div><div><small>min</small><b>0</b></div><div><small>max</small><b>43200</b></div></div>
-    </section>
-    <!-- option-of-the-day:end -->
+      <!-- option-of-the-day:start -->
+      <section id="option-of-the-day" class="wp-card ootd" data-option="Location.display_lon">
+        <h2 class="heading">Option of the Day</h2>
+        <div class="ootd-name"><code class="stat">display_lon</code></div>
+        <div class="ootd-scope"><span class="wp-badge wp-badge--plain">location option</span></div>
+        <p class="body">Latitude of the map location in degrees. If provided the <code class="wp-code">lat</code> and <code class="wp-code">lon</code> parameters will be treated as the routing location and the <code class="wp-code">display_lat</code> and <code class="wp-code">display_lon</code> will be used to determine the side of street. Both <code class="wp-code">display_lat</code> and <code class="wp-code">display_lon</code> must be provided and valid to achieve the desired effect.</p>
+        <div class="wp-stats"><div class="wp-stat"><span class="wp-stat-label">type</span><span class="code">number</span></div><div class="wp-stat"><span class="wp-stat-label">default</span><span class="code">–</span></div><div class="wp-stat"><span class="wp-stat-label">min</span><span class="code">-180</span></div><div class="wp-stat"><span class="wp-stat-label">max</span><span class="code">180</span></div></div>
+      </section>
+      <!-- option-of-the-day:end -->
+    </main>
   </body>
 </html>

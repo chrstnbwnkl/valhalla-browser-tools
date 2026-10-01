@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
 """Picks the option of the day for the front page from Valhalla's OpenAPI spec.
 
-Usage: scripts/option-of-the-day.py [--spec path/to/newer/openapi.yaml]
+Usage: scripts/option-of-the-day.py [--spec path/to/newer/openapi.yaml] [--option ID]
+       scripts/option-of-the-day.py --update-workflow
 
 With --spec, that spec replaces the repository's openapi.yaml first, and an option that changed
 between the two is picked. Otherwise, or when nothing changed, the pick is random. Costing options,
-location options and the top-level options of the requests take part.
+location options and the top-level options of the requests take part. --option features that option
+instead, as picked in the workflow's run form.
+
+The run form lists every option to pick from. --update-workflow writes that list into the workflow from
+the current spec; the workflow can't do it itself, as its token may not change workflow files.
 """
 import argparse
 import html
+import json
 import random
 import re
 import shutil
@@ -19,6 +25,9 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = ROOT / 'openapi.yaml'
 PAGE = ROOT / 'index.html'
+WORKFLOW = ROOT / '.github/workflows/option-of-the-day.yml'
+# what the run form of the workflow offers besides the options, and means "pick one as usual"
+RANDOM = '(random)'
 START = '<!-- option-of-the-day:start -->'
 END = '<!-- option-of-the-day:end -->'
 SUFFIX = 'CostingOptions'
@@ -138,9 +147,9 @@ def changes(old, new):
 def inline(text):
     """The Markdown the spec uses in descriptions, as HTML."""
     text = html.escape(text, quote=False)
-    text = re.sub(r'`([^`]+)`', r'<code>\1</code>', text)
+    text = re.sub(r'`([^`]+)`', r'<code class="wp-code">\1</code>', text)
     text = re.sub(r'\*\*([^*]+)\*\*', r'<b>\1</b>', text)
-    return re.sub(r'\[([^\]]+)\]\((https?://[^)\s]+)\)', r'<a href="\2">\1</a>', text)
+    return re.sub(r'\[([^\]]+)\]\((https?://[^)\s]+)\)', r'<a class="wp-link" href="\2">\1</a>', text)
 
 
 def value(option, field):
@@ -149,33 +158,64 @@ def value(option, field):
     return html.escape(str(option[field]))
 
 
+# the info icon of the design system, for the note on what changed
+INFO_ICON = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" '
+             'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.5"/></svg>')
+
+
 def render(option_id, option, badge, notes):
     kind, _, costings = option['scope'].partition(' · ')
-    scope = f'<span class="ootd-kind">{html.escape(kind)}</span>' + (f'for {html.escape(costings)}' if costings else '')
+    scope = f'<span class="wp-badge wp-badge--plain">{html.escape(kind)}</span>' + (f'<span class="caption">for {html.escape(costings)}</span>' if costings else '')
     # type and default always, as "no default" says something too; the range only when there is one
     facts = [('type', option.get('type', '–')), ('default', value(option, 'default') if 'default' in option else '–')]
     facts += [(label, value(option, field)) for label, field in (('min', 'minimum'), ('max', 'maximum')) if field in option]
-    facts_html = ''.join(f'<div><small>{label}</small><b>{text}</b></div>' for label, text in facts)
-    values_html = ''.join(f'<code>{html.escape(str(item))}</code>' for item in option.get('enum', []))
-    badge_html = f'<span class="ootd-badge">{badge}</span>' if badge else ''
-    notes_html = ''.join(f'<li>{html.escape(note)}</li>' for note in notes)
+    facts_html = ''.join(f'<div class="wp-stat"><span class="wp-stat-label">{label}</span><span class="code">{text}</span></div>' for label, text in facts)
+    values_html = ''.join(f'<span class="wp-tag">{html.escape(str(item))}</span>' for item in option.get('enum', []))
+    badge_html = f'<span class="wp-badge wp-badge--magenta">{badge}</span>' if badge else ''
+    notes_html = ''.join(f'<p>{html.escape(note)}</p>' for note in notes)
     return f'''{START}
-    <section id="option-of-the-day" class="ootd" data-option="{html.escape(option_id)}">
-      <h2 class="ootd-title">Option of the Day</h2>
-      <div class="ootd-name"><code>{html.escape(option['name'])}</code>{badge_html}</div>
-      <div class="ootd-scope">{scope}</div>
-      {f'<ul class="ootd-changes">{notes_html}</ul>' if notes else ''}
-      <p class="ootd-description">{inline(option['description']) or 'No description.'}</p>
-      <div class="ootd-facts">{facts_html}</div>
-      {f'<div class="ootd-values"><small>one of</small>{values_html}</div>' if values_html else ''}
-    </section>
-    {END}'''
+      <section id="option-of-the-day" class="wp-card ootd" data-option="{html.escape(option_id)}">
+        <h2 class="heading">Option of the Day</h2>
+        <div class="ootd-name"><code class="stat">{html.escape(option['name'])}</code>{badge_html}</div>
+        <div class="ootd-scope">{scope}</div>
+        {f'<div class="wp-callout" role="note">{INFO_ICON}<div>{notes_html}</div></div>' if notes else ''}
+        <p class="body">{inline(option['description']) or 'No description.'}</p>
+        <div class="wp-stats">{facts_html}</div>
+        {f'<div class="ootd-values"><small class="caption">one of</small>{values_html}</div>' if values_html else ''}
+      </section>
+      {END}'''
+
+
+# the list of options in the workflow's run form sits between these lines
+LIST_START = '# option ids:start'
+LIST_END = '# option ids:end'
+
+
+def update_workflow(options):
+    text = WORKFLOW.read_text()
+    start = text.index(LIST_START)
+    end = text.index(LIST_END)
+    indent = text[text.rindex('\n', 0, start) + 1:start]
+    items = ''.join(f"{indent}- {json.dumps(option_id)}\n" for option_id in [RANDOM, *sorted(options)])
+    WORKFLOW.write_text(text[:start] + LIST_START + '\n' + items + indent + text[end:])
+
+
+def workflow_options():
+    text = WORKFLOW.read_text()
+    block = text[text.index(LIST_START):text.index(LIST_END)]
+    return {json.loads(line.strip()[2:]) for line in block.splitlines()[1:] if line.strip().startswith('- ')} - {RANDOM}
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--spec', type=Path, help='a newer openapi.yaml to take over')
+    parser.add_argument('--option', help=f'the id of the option to feature; empty or {RANDOM} picks one as usual')
+    parser.add_argument('--update-workflow', action='store_true', help="write the options of the current spec into the workflow's run form")
     args = parser.parse_args()
+
+    if args.update_workflow:
+        update_workflow(extract(SPEC))
+        return
 
     old = extract(SPEC)
     if args.spec and args.spec.resolve() != SPEC:
@@ -185,7 +225,16 @@ def main():
     page = PAGE.read_text()
     current = re.search(r'data-option="([^"]*)"', page)
     changed = [option_id for option_id, option in new.items() if old.get(option_id) != option]
-    if changed:
+    if set(new) != workflow_options():
+        # shown on the run in GitHub
+        print('::warning::The option picker of the workflow is out of date; run scripts/option-of-the-day.py --update-workflow and commit the workflow.')
+    if args.option and args.option != RANDOM:
+        if args.option not in new:
+            raise SystemExit(f'There is no option {args.option} in the spec.')
+        option_id = args.option
+        badge = None if option_id not in changed else 'changed in Valhalla' if option_id in old else 'new in Valhalla'
+        notes = changes(old[option_id], new[option_id]) if badge and option_id in old else []
+    elif changed:
         option_id = random.choice(changed)
         badge = 'changed in Valhalla' if option_id in old else 'new in Valhalla'
         notes = changes(old[option_id], new[option_id]) if option_id in old else []

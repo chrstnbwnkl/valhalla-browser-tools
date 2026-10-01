@@ -1,116 +1,359 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Locate playground</title>
-  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css">
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; height: 100vh; display: flex; font: 13px/1.4 system-ui, sans-serif; color: #1f2937; }
-    button, input, select { font: inherit; }
-    #panel { width: 380px; flex: none; display: flex; flex-direction: column; border-right: 1px solid #d1d5db; background: #fff; }
-    #map { flex: 1; }
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Locate playground</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css"
+    />
+    <link rel="stylesheet" href="../assets/tokens.css" />
+    <link rel="stylesheet" href="../assets/waypoint.css" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        height: 100vh;
+        display: flex;
+      }
+      #panel {
+        width: 400px;
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        border-right: var(--border-hair) solid var(--line);
+        background: var(--surface);
+      }
+      #map {
+        flex: 1;
+      }
 
-    #servers, #add-server, #actions, #save-view { flex: none; display: flex; gap: 6px; align-items: center; margin: 10px 10px 0; }
-    #add-server { margin-top: 6px; }
-    #server, #server-url, #costing, #view-name { flex: 1; min-width: 0; }
-    #server-url, #costing, #view-name, #options input, #options select { padding: 3px 6px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; }
+      #servers,
+      #add-server,
+      #actions,
+      #save-view {
+        flex: none;
+        display: flex;
+        gap: var(--space-2);
+        align-items: center;
+        margin: var(--space-3) var(--space-3) 0;
+      }
+      #add-server {
+        margin-top: var(--space-2);
+      }
+      #server,
+      #server-url,
+      #costing,
+      #view-name {
+        flex: 1;
+        min-width: 0;
+      }
+      #actions .wp-toggle {
+        flex: none;
+      }
 
-    #input { height: 190px; flex: none; margin: 10px 10px 0; padding: 8px; resize: vertical; border: 1px solid #d1d5db; border-radius: 6px; font: 11px/1.4 ui-monospace, monospace; }
-    #hint { margin: 8px 10px 0; color: #6b7280; }
-    #error, #status { margin: 8px 10px 0; }
-    #error { color: #b91c1c; }
-    #status { color: #6b7280; font-variant-numeric: tabular-nums; }
-    #error:empty, #status:empty { display: none; }
+      #input {
+        height: 190px;
+        flex: none;
+        margin: var(--space-3) var(--space-3) 0;
+        width: auto;
+        padding: var(--space-2) var(--space-3);
+        resize: vertical;
+      }
+      #hint,
+      #error,
+      #status {
+        margin: var(--space-2) var(--space-3) 0;
+      }
+      #error {
+        color: var(--danger);
+      }
+      #status {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+      }
+      #error:empty,
+      #status:empty {
+        display: none;
+      }
 
-    #scroll { flex: 1; min-height: 0; overflow-y: auto; margin-top: 10px; border-top: 1px solid #e5e7eb; }
-    #options > summary { padding: 6px 10px; background: #f3f4f6; font-weight: 600; cursor: pointer; }
-    #options > summary small { color: #6b7280; font-weight: 400; }
-    #fields { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; padding: 8px 10px 10px; }
-    #fields .group { grid-column: 1 / -1; margin-top: 2px; color: #6b7280; font: 600 11px/1.4 ui-monospace, monospace; }
-    #fields label { min-width: 0; font: 11px/1.4 ui-monospace, monospace; }
-    #fields input, #fields select { display: block; width: 100%; margin-top: 1px; font: 12px/1.4 system-ui, sans-serif; }
+      #scroll {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        margin-top: var(--space-3);
+        border-top: var(--border-hair) solid var(--line);
+      }
+      #options > summary {
+        padding: var(--space-2) var(--space-3);
+        cursor: pointer;
+      }
+      #options > summary small {
+        color: var(--ink-muted);
+        font-weight: 500;
+      }
+      #fields {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-2) var(--space-3);
+        padding: var(--space-2) var(--space-3) var(--space-3);
+      }
+      #fields .group {
+        grid-column: 1 / -1;
+        color: var(--ink-muted);
+      }
+      #fields .wp-field {
+        min-width: 0;
+      }
 
-    #display { display: flex; gap: 6px; justify-content: space-between; align-items: center; padding: 6px 10px; border-top: 1px solid #e5e7eb; }
+      #display {
+        display: flex;
+        gap: var(--space-2);
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space-2) var(--space-3);
+        border-top: var(--border-hair) solid var(--line);
+      }
 
-    #results { margin: 0; padding: 0; list-style: none; }
-    #results .location { position: sticky; top: 0; display: flex; gap: 6px; align-items: center; padding: 6px 10px; background: #f3f4f6; font-weight: 600; }
-    #results .location small { color: #6b7280; font-weight: 400; }
-    #results .dot { width: 10px; height: 10px; flex: none; border-radius: 50%; }
-    #results .row { border-bottom: 1px solid #f3f4f6; border-left: 4px solid; }
-    #results .row.active { background: #fef9c3; }
-    #results .row summary { padding: 6px 10px 6px 8px; cursor: pointer; }
-    #results .row summary small { display: block; color: #6b7280; font-variant-numeric: tabular-nums; }
-    #results .row pre { margin: 0; padding: 6px 10px 8px 8px; overflow-x: auto; font: 11px/1.5 ui-monospace, monospace; }
+      #results {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      #results .location {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        display: flex;
+        gap: var(--space-2);
+        align-items: center;
+        padding: var(--space-2) var(--space-3);
+        background: var(--surface-sunken);
+      }
+      #results .location small {
+        color: var(--ink-muted);
+      }
+      #results .dot {
+        width: 10px;
+        height: 10px;
+        flex: none;
+        border-radius: var(--radius-full);
+      }
+      #results .row {
+        border-bottom: var(--border-hair) solid var(--line);
+        border-left: var(--border-route) solid;
+      }
+      #results .row:hover {
+        background: var(--surface-sunken);
+      }
+      #results .row.active {
+        background: var(--magenta-soft);
+      }
+      #results .row summary {
+        padding: var(--space-2) var(--space-3);
+        cursor: pointer;
+      }
+      #results .row summary small {
+        display: block;
+        color: var(--ink-muted);
+        font-variant-numeric: tabular-nums;
+      }
+      #results .row pre {
+        margin: 0;
+        padding: 0 var(--space-3) var(--space-3);
+        overflow-x: auto;
+      }
 
-    #saved-views { flex: none; padding-bottom: 10px; border-top: 1px solid #e5e7eb; }
-    #views { display: flex; flex-wrap: wrap; gap: 6px; max-height: 84px; overflow-y: auto; margin: 8px 10px 0; }
-    #views:empty { display: none; }
-    #views .view { display: flex; max-width: 100%; }
-    #views button { padding: 1px 6px; border: 1px solid #d1d5db; background: #f3f4f6; cursor: pointer; }
-    #views button:hover { background: #e5e7eb; }
-    #views button:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 6px 0 0 6px; }
-    #views button:last-child { flex: none; border-left: 0; border-radius: 0 6px 6px 0; color: #6b7280; }
+      #saved-views {
+        flex: none;
+        padding-bottom: var(--space-3);
+        border-top: var(--border-hair) solid var(--line);
+      }
+      #views {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        max-height: 84px;
+        overflow-y: auto;
+        margin: var(--space-2) var(--space-3) 0;
+      }
+      #views:empty {
+        display: none;
+      }
+      #views .view {
+        display: flex;
+        max-width: 100%;
+      }
+      #views .view .wp-btn:first-child {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
-    .input-marker { width: 22px; height: 22px; background: #fff; border: 3px solid; border-radius: 50%; font: 700 11px/16px ui-monospace, monospace; text-align: center; cursor: grab; box-shadow: 0 1px 3px rgb(0 0 0 / 0.4); }
-  </style>
-</head>
-<body>
-  <aside id="panel">
-    <div id="servers">
-      <select id="server" title="Valhalla server"></select>
-      <button id="remove-server" type="button" title="Forget this server">Remove</button>
-    </div>
-    <form id="add-server">
-      <input id="server-url" placeholder="Add a server, e.g. localhost:8002" spellcheck="false">
-      <button type="submit">Add</button>
-    </form>
-
-    <textarea id="input" spellcheck="false" placeholder="The /locate request JSON…"></textarea>
-    <div id="actions">
-      <button id="send" type="button" title="Ctrl+Enter">Send</button>
-      <button id="clear" type="button">Clear points</button>
-      <input id="costing" list="costings" placeholder="costing" title="costing" spellcheck="false">
-      <datalist id="costings">
-        <option value="auto"></option>
-        <option value="bicycle"></option>
-        <option value="bus"></option>
-        <option value="motor_scooter"></option>
-        <option value="motorcycle"></option>
-        <option value="pedestrian"></option>
-        <option value="taxi"></option>
-        <option value="truck"></option>
-      </datalist>
-      <label><input id="verbose" type="checkbox"> verbose</label>
-    </div>
-    <div id="hint">Click the map to locate that point. Right-click to add points, then Send. Drag a point to move it, right-click it to remove it.</div>
-    <div id="error"></div>
-    <div id="status"></div>
-
-    <div id="scroll">
-      <details id="options" open>
-        <summary>Location options <small>— set on every location; empty uses the server default</small></summary>
-        <div id="fields"></div>
-      </details>
-      <div id="display">
-        <label title="Only verbose responses have bounding circles"><input id="circles" type="checkbox"> bounding circle of the hovered edge</label>
-        <button id="copy" type="button" disabled>Copy response</button>
+      /* map chrome */
+      .basemap-toggle {
+        position: absolute;
+        top: var(--space-4);
+        left: 50%;
+        z-index: 2;
+        transform: translateX(-50%);
+        padding: var(--space-2) var(--space-3);
+      }
+      .maplibregl-ctrl-group {
+        background: var(--surface-raised);
+        box-shadow: var(--shadow-float);
+        border-radius: var(--radius-lg);
+      }
+      .maplibregl-ctrl-attrib {
+        background: var(--surface-raised);
+        color: var(--ink-muted);
+      }
+      .maplibregl-ctrl-attrib a {
+        color: inherit;
+      }
+      .maplibregl-ctrl-scale {
+        background: var(--surface-raised);
+        border-color: var(--ink-muted);
+        color: var(--ink);
+        font-family: var(--font-mono);
+      }
+      .maplibregl-ctrl-attrib.maplibregl-compact {
+        background: var(--surface-raised);
+      }
+      @media (prefers-color-scheme: dark) {
+        .maplibregl-ctrl-group button .maplibregl-ctrl-icon,
+        .maplibregl-ctrl-attrib-button {
+          filter: invert(1);
+        }
+      }
+      .input-marker {
+        width: 22px;
+        height: 22px;
+        background: var(--surface);
+        color: var(--ink);
+        border: 3px solid;
+        border-radius: var(--radius-full);
+        font: 700 11px/16px var(--font-mono);
+        text-align: center;
+        cursor: grab;
+      }
+    </style>
+  </head>
+  <body>
+    <aside id="panel" class="caption">
+      <div id="servers">
+        <select id="server" class="wp-input" title="Valhalla server"></select>
+        <button
+          id="remove-server"
+          class="wp-btn"
+          type="button"
+          title="Forget this server"
+        >
+          Remove
+        </button>
       </div>
-      <ul id="results"></ul>
-    </div>
-
-    <div id="saved-views">
-      <div id="views"></div>
-      <form id="save-view">
-        <input id="view-name" placeholder="Save this map view as, e.g. San Francisco" spellcheck="false">
-        <button type="submit">Save</button>
+      <form id="add-server">
+        <input
+          id="server-url"
+          class="wp-input"
+          placeholder="Add a server, e.g. localhost:8002"
+          spellcheck="false"
+        />
+        <button class="wp-btn" type="submit">Add</button>
       </form>
-    </div>
-  </aside>
-  <div id="map"></div>
 
-  <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
-  <script src="index.js"></script>
-</body>
+      <textarea
+        id="input"
+        class="wp-input wp-input--mono"
+        spellcheck="false"
+        placeholder="The /locate request JSON…"
+      ></textarea>
+      <div id="actions">
+        <button
+          id="send"
+          class="wp-btn wp-btn--primary"
+          type="button"
+          title="Ctrl+Enter"
+        >
+          Send
+        </button>
+        <button id="clear" class="wp-btn" type="button">Clear points</button>
+        <input
+          id="costing"
+          class="wp-input wp-input--mono"
+          list="costings"
+          placeholder="costing"
+          title="costing"
+          spellcheck="false"
+        />
+        <datalist id="costings">
+          <option value="auto"></option>
+          <option value="bicycle"></option>
+          <option value="bus"></option>
+          <option value="motor_scooter"></option>
+          <option value="motorcycle"></option>
+          <option value="pedestrian"></option>
+          <option value="taxi"></option>
+          <option value="truck"></option>
+        </datalist>
+        <label class="wp-toggle"
+          ><input id="verbose" type="checkbox" /><span
+            class="wp-toggle-track"
+          ></span
+          >verbose</label
+        >
+      </div>
+      <div id="hint" class="wp-help">
+        Click the map to locate that point. Right-click to add points, then
+        Send. Drag a point to move it, right-click it to remove it.
+      </div>
+      <div id="error" class="wp-help"></div>
+      <div id="status" class="wp-help"></div>
+
+      <div id="scroll">
+        <details id="options" open>
+          <summary class="label">
+            Location options
+            <small
+              >— set on every location; empty uses the server default</small
+            >
+          </summary>
+          <div id="fields"></div>
+        </details>
+        <div id="display">
+          <label
+            class="wp-toggle"
+            title="Only verbose responses have bounding circles"
+            ><input id="circles" type="checkbox" /><span
+              class="wp-toggle-track"
+            ></span
+            >bounding circle of the hovered edge</label
+          >
+          <button id="copy" class="wp-btn wp-btn--sm" type="button" disabled>
+            Copy response
+          </button>
+        </div>
+        <ul id="results"></ul>
+      </div>
+
+      <div id="saved-views">
+        <div id="views"></div>
+        <form id="save-view">
+          <input
+            id="view-name"
+            class="wp-input"
+            placeholder="Save this map view as, e.g. San Francisco"
+            spellcheck="false"
+          />
+          <button class="wp-btn" type="submit">Save</button>
+        </form>
+      </div>
+    </aside>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+    <script src="index.js"></script>
+  </body>
 </html>
