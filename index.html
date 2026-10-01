@@ -132,42 +132,12 @@
       </ul>
 
       <!-- option-of-the-day:start -->
-      <section
-        id="option-of-the-day"
-        class="wp-card ootd"
-        data-option="Location.display_lon"
-      >
+      <section id="option-of-the-day" class="wp-card ootd" data-option="Pedestrian.elevator_penalty">
         <h2 class="heading">Option of the Day</h2>
-        <div class="ootd-name"><code class="stat">display_lon</code></div>
-        <div class="ootd-scope">
-          <span class="wp-badge wp-badge--plain">location option</span>
-        </div>
-        <p class="body">
-          Latitude of the map location in degrees. If provided the
-          <code class="wp-code">lat</code> and
-          <code class="wp-code">lon</code> parameters will be treated as the
-          routing location and the <code class="wp-code">display_lat</code> and
-          <code class="wp-code">display_lon</code> will be used to determine the
-          side of street. Both <code class="wp-code">display_lat</code> and
-          <code class="wp-code">display_lon</code> must be provided and valid to
-          achieve the desired effect.
-        </p>
-        <div class="wp-stats">
-          <div class="wp-stat">
-            <span class="wp-stat-label">type</span
-            ><span class="code">number</span>
-          </div>
-          <div class="wp-stat">
-            <span class="wp-stat-label">default</span
-            ><span class="code">–</span>
-          </div>
-          <div class="wp-stat">
-            <span class="wp-stat-label">min</span><span class="code">-180</span>
-          </div>
-          <div class="wp-stat">
-            <span class="wp-stat-label">max</span><span class="code">180</span>
-          </div>
-        </div>
+        <div class="ootd-name"><code class="stat">elevator_penalty</code></div>
+        <div class="ootd-scope"><span class="wp-badge wp-badge--plain">costing option</span><span class="caption">for pedestrian, bikeshare</span></div>
+        <p class="body">A penalty in seconds added to each transition via an elevator node or onto an elevator edge. Higher values apply larger cost penalties to avoid elevators.</p>
+        <div class="wp-stats"><div class="wp-stat"><span class="wp-stat-label">type</span><span class="code">number</span></div><div class="wp-stat"><span class="wp-stat-label">default</span><span class="code">5</span></div><div class="wp-stat"><span class="wp-stat-label">min</span><span class="code">0</span></div><div class="wp-stat"><span class="wp-stat-label">max</span><span class="code">43200</span></div></div>
       </section>
       <!-- option-of-the-day:end -->
     </main>
