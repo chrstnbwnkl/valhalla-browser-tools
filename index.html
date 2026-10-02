@@ -132,12 +132,12 @@
       </ul>
 
       <!-- option-of-the-day:start -->
-      <section id="option-of-the-day" class="wp-card ootd" data-option="Location.radius">
+      <section id="option-of-the-day" class="wp-card ootd" data-option="Request.linear_references./route+/optimized_route">
         <h2 class="heading">Option of the Day</h2>
-        <div class="ootd-name"><code class="stat">radius</code></div>
-        <div class="ootd-scope"><span class="wp-badge wp-badge--plain">location option</span></div>
-        <p class="body">Candidate search radius in meters: all viable edge candidates within the radius are correlated. If none are found, the best one outside the radius is correlated. The default is service dependent, and defaults to 0 (only the closest edge is considered as candidate). The max value is service configuration dependent (200 by default).</p>
-        <div class="wp-stats"><div class="wp-stat"><span class="wp-stat-label">type</span><span class="code">integer</span></div><div class="wp-stat"><span class="wp-stat-label">default</span><span class="code">–</span></div><div class="wp-stat"><span class="wp-stat-label">min</span><span class="code">0</span></div></div>
+        <div class="ootd-name"><code class="stat">linear_references</code></div>
+        <div class="ootd-scope"><span class="wp-badge wp-badge--plain">request option</span><span class="caption">for /route, /optimized_route</span></div>
+        <p class="body">Include base64-encoded OpenLR references per edge in the response..</p>
+        <div class="wp-stats"><div class="wp-stat"><span class="wp-stat-label">type</span><span class="code">boolean</span></div><div class="wp-stat"><span class="wp-stat-label">default</span><span class="code">false</span></div></div>
       </section>
       <!-- option-of-the-day:end -->
     </main>
