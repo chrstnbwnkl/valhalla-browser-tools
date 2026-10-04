@@ -132,12 +132,13 @@
       </ul>
 
       <!-- option-of-the-day:start -->
-      <section id="option-of-the-day" class="wp-card ootd" data-option="Base.gate_cost">
+      <section id="option-of-the-day" class="wp-card ootd" data-option="Request.format">
         <h2 class="heading">Option of the Day</h2>
-        <div class="ootd-name"><code class="stat">gate_cost</code></div>
-        <div class="ootd-scope"><span class="wp-badge wp-badge--plain">costing option</span><span class="caption">for all costings</span></div>
-        <p class="body">A cost applied when a <a class="wp-link" href="https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate">gate</a> with undefined or private access is encountered. This cost is added to estimated and elapsed times.</p>
-        <div class="wp-stats"><div class="wp-stat"><span class="wp-stat-label">type</span><span class="code">number</span></div><div class="wp-stat"><span class="wp-stat-label">default</span><span class="code">30</span></div><div class="wp-stat"><span class="wp-stat-label">min</span><span class="code">0</span></div><div class="wp-stat"><span class="wp-stat-label">max</span><span class="code">43200</span></div></div>
+        <div class="ootd-name"><code class="stat">format</code></div>
+        <div class="ootd-scope"><span class="wp-badge wp-badge--plain">request option</span><span class="caption">for all endpoints but /height</span></div>
+        <p class="body">Not all formats are supported by all endpoints, e.g. <code class="wp-code">geotiff</code> is isochrone-only.</p>
+        <div class="wp-stats"><div class="wp-stat"><span class="wp-stat-label">type</span><span class="code">string</span></div><div class="wp-stat"><span class="wp-stat-label">default</span><span class="code">json</span></div></div>
+        <div class="ootd-values"><small class="caption">one of</small><span class="wp-tag">json</span><span class="wp-tag">gpx</span><span class="wp-tag">osrm</span><span class="wp-tag">pbf</span><span class="wp-tag">geotiff</span><span class="wp-tag">mvt</span></div>
       </section>
       <!-- option-of-the-day:end -->
     </main>
