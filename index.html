@@ -132,13 +132,12 @@
       </ul>
 
       <!-- option-of-the-day:start -->
-      <section id="option-of-the-day" class="wp-card ootd" data-option="Request.format">
+      <section id="option-of-the-day" class="wp-card ootd" data-option="Request.linear_references./trace_route">
         <h2 class="heading">Option of the Day</h2>
-        <div class="ootd-name"><code class="stat">format</code></div>
-        <div class="ootd-scope"><span class="wp-badge wp-badge--plain">request option</span><span class="caption">for all endpoints but /height</span></div>
-        <p class="body">Not all formats are supported by all endpoints, e.g. <code class="wp-code">geotiff</code> is isochrone-only.</p>
-        <div class="wp-stats"><div class="wp-stat"><span class="wp-stat-label">type</span><span class="code">string</span></div><div class="wp-stat"><span class="wp-stat-label">default</span><span class="code">json</span></div></div>
-        <div class="ootd-values"><small class="caption">one of</small><span class="wp-tag">json</span><span class="wp-tag">gpx</span><span class="wp-tag">osrm</span><span class="wp-tag">pbf</span><span class="wp-tag">geotiff</span><span class="wp-tag">mvt</span></div>
+        <div class="ootd-name"><code class="stat">linear_references</code></div>
+        <div class="ootd-scope"><span class="wp-badge wp-badge--plain">request option</span><span class="caption">for /trace_route</span></div>
+        <p class="body">Include base64-encoded OpenLR location references for each matched graph edge.</p>
+        <div class="wp-stats"><div class="wp-stat"><span class="wp-stat-label">type</span><span class="code">boolean</span></div><div class="wp-stat"><span class="wp-stat-label">default</span><span class="code">false</span></div></div>
       </section>
       <!-- option-of-the-day:end -->
     </main>
