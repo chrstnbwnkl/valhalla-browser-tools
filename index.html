@@ -132,12 +132,12 @@
       </ul>
 
       <!-- option-of-the-day:start -->
-      <section id="option-of-the-day" class="wp-card ootd" data-option="Base.closure_factor">
+      <section id="option-of-the-day" class="wp-card ootd" data-option="Request.verbose./sources_to_targets">
         <h2 class="heading">Option of the Day</h2>
-        <div class="ootd-name"><code class="stat">closure_factor</code></div>
-        <div class="ootd-scope"><span class="wp-badge wp-badge--plain">costing option</span><span class="caption">for all costings</span></div>
-        <p class="body">A factor that penalizes the cost when traversing a closed edge (eg: if <code class="wp-code">search_filter.exclude_closures</code> is <code class="wp-code">false</code> for origin and/or destination location and the route starts/ends on closed edges). Its value can range from <code class="wp-code">1.0</code> - don't penalize closed edges, to <code class="wp-code">10.0</code> - apply high cost penalty to closed edges. Default value is <code class="wp-code">9.0</code>. <b>Note:</b> This factor is applicable only for motorized modes of transport, i.e auto, motorcycle, motor_scooter, bus, truck &amp; taxi.</p>
-        <div class="wp-stats"><div class="wp-stat"><span class="wp-stat-label">type</span><span class="code">number</span></div><div class="wp-stat"><span class="wp-stat-label">default</span><span class="code">9.0</span></div><div class="wp-stat"><span class="wp-stat-label">min</span><span class="code">1</span></div><div class="wp-stat"><span class="wp-stat-label">max</span><span class="code">10</span></div></div>
+        <div class="ootd-name"><code class="stat">verbose</code></div>
+        <div class="ootd-scope"><span class="wp-badge wp-badge--plain">request option</span><span class="caption">for /sources_to_targets</span></div>
+        <p class="body">Include detailed per-cell metadata in the response.</p>
+        <div class="wp-stats"><div class="wp-stat"><span class="wp-stat-label">type</span><span class="code">boolean</span></div><div class="wp-stat"><span class="wp-stat-label">default</span><span class="code">true</span></div></div>
       </section>
       <!-- option-of-the-day:end -->
     </main>
