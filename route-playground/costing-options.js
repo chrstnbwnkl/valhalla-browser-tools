@@ -393,6 +393,14 @@ const COSTING_OPTIONS = {
         "description": "This value is meant to represent how much a cyclist wants to avoid roads with poor surfaces relative to the bicycle type being used. This is a range of values between 0 and 1. When the value is 0, there is no penalization of roads with different surface types; only bicycle speed on each surface is taken into account. As the value approaches 1, roads with poor surfaces for the bike are penalized heavier so that they are only taken if they significantly improve travel time. When the value is equal to 1, all bad surfaces are completely disallowed from routing, including start and end points."
       },
       {
+        "name": "steps_factor",
+        "type": "number",
+        "default": 8,
+        "minimum": 0.1,
+        "maximum": 100000,
+        "description": "**BETA**: A factor that multiplies the cost of steps or stairs, which are traversed at a pace of 1 km/h while carrying the bike. 1 only accounts for the slow pace, higher values avoid steps more strongly and lower values favor them."
+      },
+      {
         "name": "bss_return_cost",
         "type": "number",
         "default": 120,
