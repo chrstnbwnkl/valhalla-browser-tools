@@ -132,12 +132,13 @@
       </ul>
 
       <!-- option-of-the-day:start -->
-      <section id="option-of-the-day" class="wp-card ootd" data-option="Location.search_filter.exclude_steps">
+      <section id="option-of-the-day" class="wp-card ootd" data-option="Request.shape_format">
         <h2 class="heading">Option of the Day</h2>
-        <div class="ootd-name"><code class="stat">search_filter.exclude_steps</code><span class="wp-badge wp-badge--magenta">new in Valhalla</span></div>
-        <div class="ootd-scope"><span class="wp-badge wp-badge--plain">location option</span></div>
-        <p class="body"><b>BETA</b> Whether to exclude steps. Defaults to <code class="wp-code">true</code> for <code class="wp-code">bicycle</code> costing and <code class="wp-code">false</code> otherwise.</p>
-        <div class="wp-stats"><div class="wp-stat"><span class="wp-stat-label">type</span><span class="code">boolean</span></div><div class="wp-stat"><span class="wp-stat-label">default</span><span class="code">–</span></div></div>
+        <div class="ootd-name"><code class="stat">shape_format</code></div>
+        <div class="ootd-scope"><span class="wp-badge wp-badge--plain">request option</span><span class="caption">for all endpoints but /isochrone, /locate, /expansion</span></div>
+        <p class="body">Not all formats are supported by all endpoints, e.g. <code class="wp-code">no_shape</code> is not valid for isochrone.</p>
+        <div class="wp-stats"><div class="wp-stat"><span class="wp-stat-label">type</span><span class="code">string</span></div><div class="wp-stat"><span class="wp-stat-label">default</span><span class="code">polyline6</span></div></div>
+        <div class="ootd-values"><small class="caption">one of</small><span class="wp-tag">polyline6</span><span class="wp-tag">polyline5</span><span class="wp-tag">geojson</span><span class="wp-tag">no_shape</span></div>
       </section>
       <!-- option-of-the-day:end -->
     </main>
