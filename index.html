@@ -132,13 +132,12 @@
       </ul>
 
       <!-- option-of-the-day:start -->
-      <section id="option-of-the-day" class="wp-card ootd" data-option="Request.shape_format">
+      <section id="option-of-the-day" class="wp-card ootd" data-option="Base.country_crossing_penalty">
         <h2 class="heading">Option of the Day</h2>
-        <div class="ootd-name"><code class="stat">shape_format</code></div>
-        <div class="ootd-scope"><span class="wp-badge wp-badge--plain">request option</span><span class="caption">for all endpoints but /isochrone, /locate, /expansion</span></div>
-        <p class="body">Not all formats are supported by all endpoints, e.g. <code class="wp-code">no_shape</code> is not valid for isochrone.</p>
-        <div class="wp-stats"><div class="wp-stat"><span class="wp-stat-label">type</span><span class="code">string</span></div><div class="wp-stat"><span class="wp-stat-label">default</span><span class="code">polyline6</span></div></div>
-        <div class="ootd-values"><small class="caption">one of</small><span class="wp-tag">polyline6</span><span class="wp-tag">polyline5</span><span class="wp-tag">geojson</span><span class="wp-tag">no_shape</span></div>
+        <div class="ootd-name"><code class="stat">country_crossing_penalty</code></div>
+        <div class="ootd-scope"><span class="wp-badge wp-badge--plain">costing option</span><span class="caption">for all costings</span></div>
+        <p class="body">A penalty applied for a country crossing. This penalty can be used to create paths that avoid spanning country boundaries.</p>
+        <div class="wp-stats"><div class="wp-stat"><span class="wp-stat-label">type</span><span class="code">number</span></div><div class="wp-stat"><span class="wp-stat-label">default</span><span class="code">0</span></div><div class="wp-stat"><span class="wp-stat-label">min</span><span class="code">0</span></div><div class="wp-stat"><span class="wp-stat-label">max</span><span class="code">43200</span></div></div>
       </section>
       <!-- option-of-the-day:end -->
     </main>
