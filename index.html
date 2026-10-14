@@ -132,12 +132,12 @@
       </ul>
 
       <!-- option-of-the-day:start -->
-      <section id="option-of-the-day" class="wp-card ootd" data-option="Request.dedupe">
+      <section id="option-of-the-day" class="wp-card ootd" data-option="Bicycle.use_roads">
         <h2 class="heading">Option of the Day</h2>
-        <div class="ootd-name"><code class="stat">dedupe</code></div>
-        <div class="ootd-scope"><span class="wp-badge wp-badge--plain">request option</span><span class="caption">for /expansion</span></div>
-        <p class="body">Emit each edge only once.</p>
-        <div class="wp-stats"><div class="wp-stat"><span class="wp-stat-label">type</span><span class="code">boolean</span></div><div class="wp-stat"><span class="wp-stat-label">default</span><span class="code">false</span></div></div>
+        <div class="ootd-name"><code class="stat">use_roads</code></div>
+        <div class="ootd-scope"><span class="wp-badge wp-badge--plain">costing option</span><span class="caption">for bicycle</span></div>
+        <p class="body">A cyclist's propensity to use roads alongside other vehicles. This is a range of values from 0 to 1, where 0 attempts to avoid roads and stay on cycleways and paths, and 1 indicates the rider is more comfortable riding on roads. Based on the <code class="wp-code">use_roads</code> factor, roads with certain classifications and higher speeds are penalized in an attempt to avoid them when finding the best path.</p>
+        <div class="wp-stats"><div class="wp-stat"><span class="wp-stat-label">type</span><span class="code">number</span></div><div class="wp-stat"><span class="wp-stat-label">default</span><span class="code">0.25</span></div><div class="wp-stat"><span class="wp-stat-label">min</span><span class="code">0</span></div><div class="wp-stat"><span class="wp-stat-label">max</span><span class="code">1</span></div></div>
       </section>
       <!-- option-of-the-day:end -->
     </main>
