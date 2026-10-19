@@ -1,8 +1,8 @@
-const STORAGE_KEY = 'attributes-controller-builder:state';
-
 // Every key of Valhalla's AttributesController::kDefaultAttributes (src/baldr/attributes_controller.cc),
 // split by whether it is on or off when no filter is given.
-const GROUPS = [
+export type Group = { name: string; on: readonly string[]; off: readonly string[] };
+
+export const GROUPS: readonly Group[] = [
   {
     name: 'edge',
     on: [
@@ -97,160 +97,33 @@ const GROUPS = [
     ],
   },
 ];
-const KNOWN = new Set(GROUPS.flatMap((group) => [...group.on, ...group.off]));
-const DEFAULT_OFF = new Set(GROUPS.flatMap((group) => group.off));
+export const KNOWN: ReadonlySet<string> = new Set(GROUPS.flatMap((group) => [...group.on, ...group.off]));
+export const DEFAULT_OFF: ReadonlySet<string> = new Set(GROUPS.flatMap((group) => group.off));
 
-const $ = (id) => document.getElementById(id);
-const filterEl = $('filter');
-const availableEl = $('available');
-const selectedEl = $('selected');
-const countEl = $('count');
-const outputEl = $('output');
-const copyEl = $('copy');
-const actionEls = [...document.querySelectorAll('input[name="action"]')];
+export type Action = 'include' | 'exclude';
 
-let selected = new Set(); // attribute names; ones Valhalla doesn't know (yet) are kept as "custom"
-let action = 'include';
-// ctrl/shift+click marks attributes in a list so they can be moved together; `anchor` is where a shift range starts
-const availableMarks = { marked: new Set(), anchor: null };
-const selectedMarks = { marked: new Set(), anchor: null };
+/** A heading and the attributes listed under it. */
+export type Section = { name: string; attributes: string[] };
 
-function el(tag, props = {}, ...children) {
-  const node = Object.assign(document.createElement(tag), props);
-  node.append(...children);
-  return node;
+/**
+ * The groups with the attributes `pick` accepts, in Valhalla's order, then the selected attributes Valhalla
+ * doesn't know (yet) as "custom". Empty groups are left out.
+ */
+export function sections(selected: ReadonlySet<string>, pick: (name: string) => boolean): Section[] {
+  return [
+    ...GROUPS.map((group) => ({ name: group.name, attributes: [...group.on, ...group.off] })),
+    { name: 'custom', attributes: [...selected].filter((name) => !KNOWN.has(name)) },
+  ]
+    .map((section) => ({ ...section, attributes: section.attributes.filter(pick) }))
+    .filter((section) => section.attributes.length);
 }
 
-// Lists the attributes `pick` accepts, under their group. Clicking one, or a group's button, hands it to `move`;
-// clicking a marked one hands over everything marked.
-function renderList(target, marks, pick, move, moveLabel) {
-  const sections = [
-    ...GROUPS.map((group) => [group.name, [...group.on, ...group.off]]),
-    ['custom', [...selected].filter((name) => !KNOWN.has(name))],
-  ];
-  const shown = [];
-  target.replaceChildren(...sections.flatMap(([groupName, names]) => {
-    const picked = names.filter(pick);
-    if (!picked.length) return [];
-    shown.push(...picked);
-    const button = el('button', { type: 'button', className: 'wp-btn wp-btn--ghost wp-btn--sm', textContent: moveLabel });
-    button.addEventListener('click', () => move(picked));
-    return [
-      el('li', { className: 'group label' }, groupName, button),
-      ...picked.map((name) => {
-        const item = el('li', { className: 'attribute' }, name, DEFAULT_OFF.has(name) ? el('small', { textContent: 'off by default' }) : '');
-        item.classList.toggle('marked', marks.marked.has(name));
-        item.addEventListener('click', (e) => {
-          if (e.shiftKey && shown.includes(marks.anchor)) {
-            const [from, to] = [shown.indexOf(marks.anchor), shown.indexOf(name)].sort((a, b) => a - b);
-            for (const between of shown.slice(from, to + 1)) marks.marked.add(between);
-            render();
-          } else if (e.shiftKey || e.ctrlKey || e.metaKey) {
-            if (!marks.marked.delete(name)) marks.marked.add(name);
-            marks.anchor = name;
-            render();
-          } else {
-            move(marks.marked.has(name) ? shown.filter((other) => marks.marked.has(other)) : [name]);
-          }
-        });
-        return item;
-      }),
-    ];
-  }));
-  return shown;
-}
+/** The selection in Valhalla's order, custom attributes last. */
+export const orderedSelection = (selected: ReadonlySet<string>) => [
+  ...[...KNOWN].filter((name) => selected.has(name)),
+  ...[...selected].filter((name) => !KNOWN.has(name)),
+];
 
-function clearMarks(marks) {
-  marks.marked.clear();
-  marks.anchor = null;
-}
-
-function add(names) {
-  for (const name of names) selected.add(name);
-  clearMarks(availableMarks);
-  update();
-}
-
-function remove(names) {
-  for (const name of names) selected.delete(name);
-  clearMarks(selectedMarks);
-  update();
-}
-
-// in Valhalla's order, custom attributes last
-const orderedSelection = () => [...[...KNOWN].filter((name) => selected.has(name)), ...[...selected].filter((name) => !KNOWN.has(name))];
-
-let available = []; // what the left list currently shows
-
-function render() {
-  const filter = filterEl.value.trim().toLowerCase();
-  available = renderList(availableEl, availableMarks, (name) => !selected.has(name) && name.includes(filter), add, 'add all');
-  if (filter && !KNOWN.has(filter) && !selected.has(filter)) {
-    const custom = el('li', { className: 'attribute' }, `Add "${filter}"`, el('small', { textContent: 'custom' }));
-    custom.addEventListener('click', () => addCustom(filter));
-    availableEl.prepend(custom);
-  }
-  renderList(selectedEl, selectedMarks, (name) => selected.has(name), remove, 'remove all');
-  countEl.textContent = `${selected.size} of ${KNOWN.size}`;
-  for (const radio of actionEls) radio.checked = radio.value === action;
-  outputEl.value = JSON.stringify({ filters: { attributes: orderedSelection(), action } }, null, 2);
-}
-
-function update() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ selected: [...selected], action }));
-  } catch {
-    // storage unavailable
-  }
-  render();
-}
-
-function addCustom(name) {
-  filterEl.value = '';
-  add([name]);
-}
-
-function restore() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (Array.isArray(saved?.selected)) selected = new Set(saved.selected.filter((name) => typeof name === 'string'));
-    if (saved?.action === 'exclude') action = 'exclude';
-  } catch {
-    // storage unavailable or corrupt
-  }
-}
-
-filterEl.addEventListener('input', render);
-// Enter adds the only match, or the typed text as a custom attribute when nothing matches
-filterEl.addEventListener('keydown', (e) => {
-  if (e.key !== 'Enter') return;
-  const filter = filterEl.value.trim().toLowerCase();
-  if (available.length === 1) addCustom(available[0]);
-  else if (filter && !available.length && !selected.has(filter)) addCustom(filter);
-});
-for (const radio of actionEls) {
-  radio.addEventListener('change', () => {
-    action = radio.value;
-    update();
-  });
-}
-copyEl.addEventListener('click', async () => {
-  try {
-    await navigator.clipboard.writeText(outputEl.value);
-  } catch {
-    // no clipboard access (e.g. opened from disk): fall back to copying the selected text
-    outputEl.select();
-    document.execCommand('copy');
-  }
-  copyEl.textContent = 'Copied';
-  setTimeout(() => (copyEl.textContent = 'Copy'), 1200);
-});
-// keep up with other tabs
-window.addEventListener('storage', (e) => {
-  if (e.key !== STORAGE_KEY) return;
-  restore();
-  render();
-});
-
-restore();
-render();
+/** The `filters` request parameter for the selection. */
+export const filterJson = (selected: ReadonlySet<string>, action: Action) =>
+  JSON.stringify({ filters: { attributes: orderedSelection(selected), action } }, null, 2);

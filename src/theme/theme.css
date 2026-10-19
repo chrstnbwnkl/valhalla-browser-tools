@@ -1,0 +1,67 @@
+/*
+ * The design system for every React page: Tailwind, configured from the Waypoint tokens.
+ *
+ * assets/tokens.css stays the single source of the token values (it is generated from tokens.json and still
+ * used by the legacy pages). It is imported into the base layer so its type classes (.label, .code, ...)
+ * can be overridden by utilities; the theme below only maps the tokens onto Tailwind's names.
+ */
+@import 'tailwindcss';
+@import '../../assets/tokens.css' layer(base);
+
+/* Only the Waypoint palette exists: bg-surface, text-ink-muted, border-line, accent-green, ... They resolve
+ * to the runtime variables, so light/dark switching stays with tokens.css. */
+@theme inline {
+  --color-*: initial;
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-green: var(--green);
+  --color-on-green: var(--on-green);
+  --color-green-ink: var(--green-ink);
+  --color-green-soft: var(--green-soft);
+  --color-magenta: var(--magenta);
+  --color-on-magenta: var(--on-magenta);
+  --color-magenta-ink: var(--magenta-ink);
+  --color-magenta-soft: var(--magenta-soft);
+  --color-blue: var(--blue);
+  --color-blue-soft: var(--blue-soft);
+  --color-amber: var(--amber);
+  --color-amber-ink: var(--amber-ink);
+  --color-amber-soft: var(--amber-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-focus: var(--focus);
+  --color-link: var(--link);
+}
+
+/* Tokens whose names already match Tailwind's (--font-sans, --radius-md, --shadow-float, ...): registered
+ * for the utilities but not emitted, so the values from tokens.css apply. Spacing needs nothing: Tailwind's
+ * 4px step gives p-1 … p-16 the same values as --space-1 … --space-16. */
+@theme reference {
+  --font-*: initial;
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --radius-*: initial;
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-full: var(--radius-full);
+  --shadow-*: initial;
+  --shadow-sm: var(--shadow-sm);
+  --shadow-float: var(--shadow-float);
+}
+
+@layer base {
+  body {
+    background: var(--surface);
+    color: var(--ink);
+    font: 500 16px/26px var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
