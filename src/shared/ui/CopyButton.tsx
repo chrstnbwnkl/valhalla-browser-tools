@@ -1,0 +1,26 @@
+import { useEffect, useState } from "react";
+import { copyText } from "../clipboard";
+import { Button, type ButtonProps } from "./Button";
+
+export function CopyButton({
+  text,
+  children = "Copy",
+  ...props
+}: Omit<ButtonProps, "onClick"> & { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 1200);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
+  return (
+    <Button
+      {...props}
+      onClick={() => void copyText(text).then(() => setCopied(true))}
+    >
+      {copied ? "Copied" : children}
+    </Button>
+  );
+}

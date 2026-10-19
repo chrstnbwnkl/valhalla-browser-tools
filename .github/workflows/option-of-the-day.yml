@@ -222,13 +222,13 @@ jobs:
           OPTION: ${{ inputs.option }}
         run: |
           python scripts/option-of-the-day.py --spec valhalla/docs/docs/api/openapi.yaml --option "$OPTION"
-          python route-playground/generate-costing-options.py
+          python scripts/generate-costing-options.py
           rm -rf valhalla
 
       - name: Commit
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add openapi.yaml index.html route-playground/costing-options.js
+          git add openapi.yaml src/home/option-of-the-day.json src/tools/route-playground/costing-options.json
           git diff --cached --quiet || git commit -m 'Option of the day'
           git push

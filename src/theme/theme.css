@@ -1,0 +1,58 @@
+/* Tailwind themed with the Waypoint tokens from assets/tokens.css. */
+@import "tailwindcss";
+@import "../../assets/tokens.css" layer(base);
+
+/* only the Waypoint palette; resolved at runtime so light/dark keeps working */
+@theme inline {
+  --color-*: initial;
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-green: var(--green);
+  --color-on-green: var(--on-green);
+  --color-green-ink: var(--green-ink);
+  --color-green-soft: var(--green-soft);
+  --color-magenta: var(--magenta);
+  --color-on-magenta: var(--on-magenta);
+  --color-magenta-ink: var(--magenta-ink);
+  --color-magenta-soft: var(--magenta-soft);
+  --color-blue: var(--blue);
+  --color-blue-soft: var(--blue-soft);
+  --color-amber: var(--amber);
+  --color-amber-ink: var(--amber-ink);
+  --color-amber-soft: var(--amber-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-focus: var(--focus);
+  --color-link: var(--link);
+}
+
+/* names tokens.css already defines; spacing matches Tailwind's 4px steps */
+@theme reference {
+  --font-*: initial;
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --radius-*: initial;
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-full: var(--radius-full);
+  --shadow-*: initial;
+  --shadow-sm: var(--shadow-sm);
+  --shadow-float: var(--shadow-float);
+}
+
+@layer base {
+  body {
+    background: var(--surface);
+    color: var(--ink);
+    font: 500 16px/26px var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}

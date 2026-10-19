@@ -1,0 +1,10 @@
+{
+  "id": "Location.rank_candidates",
+  "name": "rank_candidates",
+  "scope": "location option",
+  "type": "boolean",
+  "default": true,
+  "description": "Rank snap candidates by distance to input.",
+  "badge": null,
+  "notes": []
+}
