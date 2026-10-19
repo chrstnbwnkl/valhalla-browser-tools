@@ -4,6 +4,7 @@ import { cn } from "../cn";
 const TONES = {
   plain: "bg-surface-sunken text-ink-muted",
   green: "bg-green-soft text-green-ink",
+  magenta: "bg-magenta-soft text-magenta-ink",
   amber: "bg-amber-soft text-amber-ink",
   danger: "bg-danger-soft text-danger",
 };
@@ -22,7 +23,9 @@ export function Badge({
         TONES[tone],
       )}
     >
-      <span className="size-1.5 rounded-full bg-current" />
+      {tone !== "plain" && (
+        <span className="size-1.5 rounded-full bg-current" />
+      )}
       {children}
     </span>
   );

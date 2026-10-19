@@ -1,10 +1,10 @@
 dist
 pnpm-lock.yaml
 assets
-# written by scripts/option-of-the-day.py, which doesn't format like Prettier
-index.html
 openapi.yaml
+# written by scripts/option-of-the-day.py
 .github/workflows/option-of-the-day.yml
 # generated
+src/home/option-of-the-day.json
 src/tools/route-playground/costing-options.json
 src/tools/route-playground/fixtures
