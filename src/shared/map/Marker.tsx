@@ -9,12 +9,16 @@ import {
 import { createPortal } from "react-dom";
 import { useLoadedMap } from "./context";
 
+export const LONG_PRESS_MS = 500;
+
 type Props = {
   lngLat: [lon: number, lat: number];
   draggable?: boolean;
   onDragEnd?: (lngLat: LngLat) => void;
   /** A native listener, so stopping the event keeps it from the map. */
   onContextMenu?: (e: MouseEvent) => void;
+  /** Pressing and holding without moving. */
+  onLongPress?: () => void;
   children: ReactNode;
 };
 
@@ -23,6 +27,7 @@ export function Marker({
   draggable = false,
   onDragEnd,
   onContextMenu,
+  onLongPress,
   children,
 }: Props) {
   const map = useLoadedMap();
@@ -59,6 +64,39 @@ export function Marker({
     return () => {
       element.removeEventListener("mousedown", onMouseDown);
       element.removeEventListener("contextmenu", contextMenu);
+    };
+  }, [element]);
+
+  const longPress = useEffectEvent(() => onLongPress?.());
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let start: { x: number; y: number } | null = null;
+    const cancel = () => {
+      clearTimeout(timer);
+      start = null;
+    };
+    const onDown = (e: PointerEvent) => {
+      if (e.button !== 0) return;
+      start = { x: e.clientX, y: e.clientY };
+      timer = setTimeout(() => {
+        start = null;
+        longPress();
+      }, LONG_PRESS_MS);
+    };
+    const onMove = (e: PointerEvent) => {
+      if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 4)
+        cancel();
+    };
+    element.addEventListener("pointerdown", onDown);
+    element.addEventListener("pointermove", onMove);
+    element.addEventListener("pointerup", cancel);
+    element.addEventListener("pointercancel", cancel);
+    return () => {
+      cancel();
+      element.removeEventListener("pointerdown", onDown);
+      element.removeEventListener("pointermove", onMove);
+      element.removeEventListener("pointerup", cancel);
+      element.removeEventListener("pointercancel", cancel);
     };
   }, [element]);
 

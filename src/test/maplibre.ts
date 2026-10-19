@@ -60,6 +60,7 @@ export class Map {
   images = new globalThis.Map<string, unknown>();
   controls = new Set<unknown>();
   markers = new Set<Marker>();
+  popups = new Set<Popup>();
   listeners: Listener[] = [];
   center: LngLat;
   zoom: number;
@@ -218,6 +219,50 @@ export class Map {
   }
   remove() {
     this.removed = true;
+  }
+}
+
+export class Popup {
+  private lngLat = new LngLat(0, 0);
+  private map: Map | null = null;
+  private listeners: Record<string, (() => void)[]> = {};
+  element: HTMLElement | null = null;
+
+  constructor(public options?: object) {}
+  setLngLat(input: LngLatLike) {
+    this.lngLat = LngLat.convert(input);
+    return this;
+  }
+  getLngLat() {
+    return this.lngLat;
+  }
+  setDOMContent(element: HTMLElement) {
+    this.element = element;
+    return this;
+  }
+  addTo(map: Map) {
+    this.map = map;
+    map.popups.add(this);
+    if (this.element) map.getContainer().append(this.element);
+    return this;
+  }
+  remove() {
+    this.map?.popups.delete(this);
+    this.element?.remove();
+    for (const fn of this.listeners.close ?? []) fn();
+    return this;
+  }
+  on(type: string, fn: () => void) {
+    (this.listeners[type] ??= []).push(fn);
+    return this;
+  }
+  off(type: string, fn: () => void) {
+    this.listeners[type] = (this.listeners[type] ?? []).filter((f) => f !== fn);
+    return this;
+  }
+  /** Closes it with its × button, as a user would. */
+  close() {
+    this.remove();
   }
 }
 

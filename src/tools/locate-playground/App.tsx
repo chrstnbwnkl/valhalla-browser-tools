@@ -77,6 +77,8 @@ export function App() {
   const [response, setResponse] = useState<LocateResult[] | null>(null);
   const [highlighted, setHighlighted] = useState<number | null>(null);
   const [showCircles, setShowCircles] = useState(false);
+  // the location whose options popup is open
+  const [editing, setEditing] = useState<number | null>(null);
   // the JSON was typed into since the last send
   const edited = useRef(false);
   const pending = useRef<AbortController | null>(null);
@@ -207,13 +209,28 @@ export function App() {
     if (req) change({ ...req, verbose });
   }
 
+  function setLocationOption(index: number, option: Option, raw: string) {
+    const req = editable();
+    if (!req) return;
+    const value = optionValue(option, raw);
+    change({
+      ...req,
+      locations: locations.map((l, i) =>
+        i === index ? withOption(l, option.path, value) : l,
+      ),
+    });
+  }
+
   function locateAt(lngLat: LngLat) {
+    // with a popup open, a click only closes it
+    if (editing !== null) return setEditing(null);
     const req = editable();
     if (!req) return;
     change({ ...req, locations: [newLocation(lngLat, template)] });
   }
 
   function setLocations(next: Location[]) {
+    setEditing(null);
     const req = editable();
     if (req) change({ ...req, locations: next });
   }
@@ -282,7 +299,8 @@ export function App() {
         </div>
         <p className="mx-3 mt-2 mb-0 text-ink-muted">
           Click the map to locate that point, right-click to add one. Drag a
-          point to move it, right-click it to remove it.
+          point to move it, hold it to set its own options, right-click it to
+          remove it.
         </p>
         {(error ?? parseError) && (
           <p role="alert" className="mx-3 mt-2 mb-0 text-danger">
@@ -362,6 +380,9 @@ export function App() {
           onRemoveLocation={(index) =>
             setLocations(locations.filter((_, i) => i !== index))
           }
+          editing={editing}
+          onEdit={setEditing}
+          onLocationOption={setLocationOption}
           onHover={setHighlighted}
         />
       </MapView>

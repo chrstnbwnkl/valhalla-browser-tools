@@ -14,8 +14,10 @@ import {
   type Filter,
 } from "../../shared/map/hooks";
 import { Marker } from "../../shared/map/Marker";
+import { Popup } from "../../shared/map/Popup";
 import type { ThemeColors } from "../../shared/theme/colors";
-import { positionOf, type Location } from "./request";
+import { OptionFields } from "./OptionFields";
+import { positionOf, type Location, type Option } from "./request";
 import { seriesColor, type Results } from "./results";
 
 const EMPTY = fc([]);
@@ -33,6 +35,10 @@ type Props = {
   onContextMenu: (lngLat: LngLat) => void;
   onMoveLocation: (index: number, lngLat: LngLat) => void;
   onRemoveLocation: (index: number) => void;
+  /** The location whose options popup is open. */
+  editing: number | null;
+  onEdit: (index: number | null) => void;
+  onLocationOption: (index: number, option: Option, raw: string) => void;
   onHover: (idx: number | null) => void;
 };
 
@@ -46,6 +52,9 @@ export function LocateMap({
   onContextMenu,
   onMoveLocation,
   onRemoveLocation,
+  editing,
+  onEdit,
+  onLocationOption,
   onHover,
 }: Props) {
   const map = useLoadedMap();
@@ -211,7 +220,10 @@ export function LocateMap({
     onContextMenu(e.lngLat);
   });
 
-  return locations.map((location, i) => {
+  const edited = editing === null ? null : locations[editing];
+  const editedAt = edited && positionOf(edited);
+
+  const markers = locations.map((location, i) => {
     const at = positionOf(location);
     if (!at) return null;
     return (
@@ -225,15 +237,37 @@ export function LocateMap({
           e.stopPropagation(); // or the map adds a point here
           onRemoveLocation(i);
         }}
+        onLongPress={() => onEdit(i)}
       >
         <div
           className={`${MARKER_CLASS} size-[22px] cursor-grab rounded-full border-3 bg-surface text-center font-mono text-[11px]/4 font-bold text-ink`}
           style={{ borderColor: seriesColor(colors, i) }}
-          title="Drag to move, right-click to remove"
+          title="Drag to move, hold for its options, right-click to remove"
         >
           {i + 1}
         </div>
       </Marker>
     );
   });
+
+  return (
+    <>
+      {markers}
+      {editing !== null && edited && editedAt && (
+        <Popup lngLat={editedAt} onClose={() => onEdit(null)}>
+          <div
+            role="dialog"
+            aria-label={`Location ${editing + 1} options`}
+            className="caption max-h-[60vh] w-[360px] overflow-y-auto"
+          >
+            <div className="label px-3 pt-2 pr-8">Location {editing + 1}</div>
+            <OptionFields
+              locations={[edited]}
+              onChange={(option, raw) => onLocationOption(editing, option, raw)}
+            />
+          </div>
+        </Popup>
+      )}
+    </>
+  );
 }

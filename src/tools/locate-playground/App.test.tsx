@@ -9,6 +9,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { MapProvider } from "../../shared/map/context";
+import { LONG_PRESS_MS } from "../../shared/map/Marker";
 import { SERVERS_KEY } from "../../shared/valhalla/servers";
 import { VIEWS_KEY } from "../../shared/valhalla/views";
 import { Map as FakeMap, LngLat } from "../../test/maplibre";
@@ -79,8 +80,7 @@ const requestBox = () =>
 const request = () => JSON.parse(requestBox().value);
 const urlRequest = () =>
   JSON.parse(new URLSearchParams(location.search).get(URL_PARAM)!);
-const markers = () =>
-  screen.queryAllByTitle("Drag to move, right-click to remove");
+const markers = () => screen.queryAllByTitle(/^Drag to move/);
 const click = (
   map: FakeMap,
   lng: number,
@@ -236,6 +236,7 @@ describe("locate playground", () => {
   });
 
   it("sets an option on every location, and on the points added after", async () => {
+    serve();
     const { user, map } = await setup();
     rightClick(map, 1, 1);
     rightClick(map, 2, 2);
@@ -291,6 +292,84 @@ describe("locate playground", () => {
     await user.type(screen.getByRole("spinbutton", { name: "radius" }), "100");
     await waitFor(() => expect(sent().at(-1).locations[0].radius).toBe(100));
     expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  describe("holding a point", () => {
+    const hold = (marker: HTMLElement) =>
+      fireEvent.pointerDown(marker, { button: 0, clientX: 10, clientY: 10 });
+    const popup = () =>
+      screen.queryByRole("dialog", { name: /^Location \d+ options$/ });
+    const pause = () =>
+      act(() => new Promise((done) => setTimeout(done, LONG_PRESS_MS + 50)));
+
+    async function twoPoints() {
+      const { sent } = serve();
+      const { user, map } = await setup();
+      rightClick(map, 1, 1);
+      rightClick(map, 2, 2);
+      return { sent, user, map };
+    }
+
+    it("opens the options of just that point", async () => {
+      const { sent, user } = await twoPoints();
+      hold(markers()[1]!);
+      const options = within(
+        await screen.findByRole("dialog", { name: "Location 2 options" }),
+      );
+
+      await user.selectOptions(
+        options.getByRole("combobox", { name: "preferred_side" }),
+        "same",
+      );
+      expect(request().locations).toEqual([
+        { lat: 1, lon: 1 },
+        { lat: 2, lon: 2, preferred_side: "same" },
+      ]);
+      expect(sent().at(-1).locations[1].preferred_side).toBe("same");
+      expect(
+        options.getByRole("combobox", { name: "preferred_side" }),
+      ).toHaveValue("same");
+      // the side panel shows the points disagree
+      expect(
+        within(
+          screen.getAllByRole("combobox", { name: "preferred_side" })[0]!,
+        ).getByRole("option", { name: "mixed" }),
+      ).toBeInTheDocument();
+    });
+
+    it("doesn't open on a quick click or when dragging", async () => {
+      await twoPoints();
+      hold(markers()[0]!);
+      fireEvent.pointerUp(markers()[0]!);
+      await pause();
+      expect(popup()).not.toBeInTheDocument();
+
+      hold(markers()[0]!);
+      fireEvent.pointerMove(markers()[0]!, { clientX: 30, clientY: 10 });
+      await pause();
+      expect(popup()).not.toBeInTheDocument();
+    });
+
+    it("closes with its × button, a click on the map or removing points", async () => {
+      const { map, sent } = await twoPoints();
+      hold(markers()[0]!);
+      await screen.findByRole("dialog");
+      act(() => [...map.popups][0]!.close());
+      expect(popup()).not.toBeInTheDocument();
+
+      hold(markers()[0]!);
+      await screen.findByRole("dialog");
+      const before = sent().length;
+      click(map, 5, 5);
+      expect(popup()).not.toBeInTheDocument();
+      expect(sent()).toHaveLength(before);
+      expect(request().locations).toHaveLength(2);
+
+      hold(markers()[0]!);
+      await screen.findByRole("dialog");
+      fireEvent.contextMenu(markers()[1]!);
+      expect(popup()).not.toBeInTheDocument();
+    });
   });
 
   it("shows what a typed request says, with options the locations disagree on as mixed", async () => {
