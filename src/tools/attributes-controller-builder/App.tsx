@@ -1,13 +1,13 @@
-import { useMemo, useState } from 'react';
-import { Card } from '../../shared/ui/Card';
-import { CopyButton } from '../../shared/ui/CopyButton';
-import { Input, TextArea } from '../../shared/ui/Input';
-import { useStoredState } from '../../shared/hooks/useStoredState';
-import { AttributeList, ExtraItem } from './AttributeList';
-import { KNOWN, filterJson, sections, type Action } from './attributes';
-import { NO_MARKS } from './marks';
+import { useMemo, useState } from "react";
+import { Card } from "../../shared/ui/Card";
+import { CopyButton } from "../../shared/ui/CopyButton";
+import { Input, TextArea } from "../../shared/ui/Input";
+import { json, useStoredState } from "../../shared/hooks/useStoredState";
+import { AttributeList, ExtraItem } from "./AttributeList";
+import { KNOWN, filterJson, sections, type Action } from "./attributes";
+import { NO_MARKS } from "./marks";
 
-export const STORAGE_KEY = 'attributes-controller-builder:state';
+export const STORAGE_KEY = "attributes-controller-builder:state";
 
 type Stored = { selected: string[]; action: Action };
 
@@ -16,36 +16,49 @@ function parseStored(raw: unknown): Stored {
   const saved = raw as { selected?: unknown; action?: unknown } | null;
   return {
     selected: Array.isArray(saved?.selected)
-      ? saved.selected.filter((name): name is string => typeof name === 'string')
+      ? saved.selected.filter(
+          (name): name is string => typeof name === "string",
+        )
       : [],
-    action: saved?.action === 'exclude' ? 'exclude' : 'include',
+    action: saved?.action === "exclude" ? "exclude" : "include",
   };
 }
 
-const HEADER = 'flex items-center gap-3 border-b border-line px-4 py-3';
+const STORED = json(parseStored);
+
+const HEADER = "flex items-center gap-3 border-b border-line px-4 py-3";
 
 export function App() {
-  const [stored, setStored] = useStoredState(STORAGE_KEY, parseStored);
+  const [stored, setStored] = useStoredState(STORAGE_KEY, STORED);
   const selected = useMemo(() => new Set(stored.selected), [stored.selected]);
-  const [filterInput, setFilterInput] = useState('');
+  const [filterInput, setFilterInput] = useState("");
   const [availableMarks, setAvailableMarks] = useState(NO_MARKS);
   const [selectedMarks, setSelectedMarks] = useState(NO_MARKS);
 
   const filter = filterInput.trim().toLowerCase();
-  const available = sections(selected, (name) => !selected.has(name) && name.includes(filter));
+  const available = sections(
+    selected,
+    (name) => !selected.has(name) && name.includes(filter),
+  );
   const availableNames = available.flatMap((section) => section.attributes);
   const canAddCustom = filter && !KNOWN.has(filter) && !selected.has(filter);
 
   const add = (names: string[]) => {
-    setStored({ ...stored, selected: [...new Set([...stored.selected, ...names])] });
+    setStored({
+      ...stored,
+      selected: [...new Set([...stored.selected, ...names])],
+    });
     setAvailableMarks(NO_MARKS);
   };
   const remove = (names: string[]) => {
-    setStored({ ...stored, selected: stored.selected.filter((name) => !names.includes(name)) });
+    setStored({
+      ...stored,
+      selected: stored.selected.filter((name) => !names.includes(name)),
+    });
     setSelectedMarks(NO_MARKS);
   };
   const addCustom = (name: string) => {
-    setFilterInput('');
+    setFilterInput("");
     add([name]);
   };
 
@@ -64,9 +77,14 @@ export function App() {
               onChange={(e) => setFilterInput(e.target.value)}
               // Enter adds the only match, or the typed text as a custom attribute when nothing matches
               onKeyDown={(e) => {
-                if (e.key !== 'Enter') return;
+                if (e.key !== "Enter") return;
                 if (availableNames.length === 1) addCustom(availableNames[0]!);
-                else if (filter && !availableNames.length && !selected.has(filter)) addCustom(filter);
+                else if (
+                  filter &&
+                  !availableNames.length &&
+                  !selected.has(filter)
+                )
+                  addCustom(filter);
               }}
             />
           </header>
@@ -94,8 +112,11 @@ export function App() {
               {selected.size} of {KNOWN.size}
             </small>
             <div className="caption flex flex-1 justify-end gap-4">
-              {(['include', 'exclude'] as const).map((action) => (
-                <label key={action} className="flex cursor-pointer items-center gap-1">
+              {(["include", "exclude"] as const).map((action) => (
+                <label
+                  key={action}
+                  className="flex cursor-pointer items-center gap-1"
+                >
                   <input
                     type="radio"
                     name="action"
@@ -128,7 +149,10 @@ export function App() {
           spellCheck={false}
           value={filterJson(selected, stored.action)}
         />
-        <CopyButton variant="primary" text={filterJson(selected, stored.action)} />
+        <CopyButton
+          variant="primary"
+          text={filterJson(selected, stored.action)}
+        />
       </div>
     </div>
   );

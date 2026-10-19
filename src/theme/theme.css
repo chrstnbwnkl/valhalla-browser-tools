@@ -5,8 +5,8 @@
  * used by the legacy pages). It is imported into the base layer so its type classes (.label, .code, ...)
  * can be overridden by utilities; the theme below only maps the tokens onto Tailwind's names.
  */
-@import 'tailwindcss';
-@import '../../assets/tokens.css' layer(base);
+@import "tailwindcss";
+@import "../../assets/tokens.css" layer(base);
 
 /* Only the Waypoint palette exists: bg-surface, text-ink-muted, border-line, accent-green, ... They resolve
  * to the runtime variables, so light/dark switching stays with tokens.css. */

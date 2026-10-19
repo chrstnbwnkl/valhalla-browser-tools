@@ -1,7 +1,12 @@
 // Every key of Valhalla's AttributesController::kDefaultAttributes (src/baldr/attributes_controller.cc),
 // split by whether it is on or off when no filter is given.
-export type Group = { name: string; on: readonly string[]; off: readonly string[] };
+export type Group = {
+  name: string;
+  on: readonly string[];
+  off: readonly string[];
+};
 
+// prettier-ignore
 export const GROUPS: readonly Group[] = [
   {
     name: 'edge',
@@ -97,10 +102,14 @@ export const GROUPS: readonly Group[] = [
     ],
   },
 ];
-export const KNOWN: ReadonlySet<string> = new Set(GROUPS.flatMap((group) => [...group.on, ...group.off]));
-export const DEFAULT_OFF: ReadonlySet<string> = new Set(GROUPS.flatMap((group) => group.off));
+export const KNOWN: ReadonlySet<string> = new Set(
+  GROUPS.flatMap((group) => [...group.on, ...group.off]),
+);
+export const DEFAULT_OFF: ReadonlySet<string> = new Set(
+  GROUPS.flatMap((group) => group.off),
+);
 
-export type Action = 'include' | 'exclude';
+export type Action = "include" | "exclude";
 
 /** A heading and the attributes listed under it. */
 export type Section = { name: string; attributes: string[] };
@@ -109,12 +118,24 @@ export type Section = { name: string; attributes: string[] };
  * The groups with the attributes `pick` accepts, in Valhalla's order, then the selected attributes Valhalla
  * doesn't know (yet) as "custom". Empty groups are left out.
  */
-export function sections(selected: ReadonlySet<string>, pick: (name: string) => boolean): Section[] {
+export function sections(
+  selected: ReadonlySet<string>,
+  pick: (name: string) => boolean,
+): Section[] {
   return [
-    ...GROUPS.map((group) => ({ name: group.name, attributes: [...group.on, ...group.off] })),
-    { name: 'custom', attributes: [...selected].filter((name) => !KNOWN.has(name)) },
+    ...GROUPS.map((group) => ({
+      name: group.name,
+      attributes: [...group.on, ...group.off],
+    })),
+    {
+      name: "custom",
+      attributes: [...selected].filter((name) => !KNOWN.has(name)),
+    },
   ]
-    .map((section) => ({ ...section, attributes: section.attributes.filter(pick) }))
+    .map((section) => ({
+      ...section,
+      attributes: section.attributes.filter(pick),
+    }))
     .filter((section) => section.attributes.length);
 }
 
@@ -126,4 +147,8 @@ export const orderedSelection = (selected: ReadonlySet<string>) => [
 
 /** The `filters` request parameter for the selection. */
 export const filterJson = (selected: ReadonlySet<string>, action: Action) =>
-  JSON.stringify({ filters: { attributes: orderedSelection(selected), action } }, null, 2);
+  JSON.stringify(
+    { filters: { attributes: orderedSelection(selected), action } },
+    null,
+    2,
+  );
