@@ -1,4 +1,9 @@
-import type { ComponentProps } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useState,
+  type ComponentProps,
+} from "react";
 import { cn } from "../cn";
 
 const FIELD =
@@ -43,14 +48,30 @@ type CommitInputProps = Omit<
   onCommit: (value: string) => void;
 };
 
-/** Reports its value when left or on Enter, not on every keystroke. */
+/** Reports its value after a pause in changes, when left, or on Enter. */
 export function CommitInput({ value, onCommit, ...props }: CommitInputProps) {
+  const [draft, setDraft] = useState(value);
+  const [outside, setOutside] = useState(value);
+  if (value !== outside) {
+    setOutside(value);
+    setDraft(value);
+  }
+
+  const commit = () => {
+    if (draft !== value) onCommit(draft);
+  };
+  const commitLater = useEffectEvent(commit);
+  useEffect(() => {
+    const timer = setTimeout(commitLater, 300);
+    return () => clearTimeout(timer);
+  }, [draft]);
+
   return (
     <Input
-      key={value}
-      defaultValue={value}
-      onBlur={(e) => e.target.value !== value && onCommit(e.target.value)}
-      onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => e.key === "Enter" && commit()}
       {...props}
     />
   );

@@ -268,6 +268,31 @@ describe("locate playground", () => {
     expect(request().locations[0]).toEqual({ lat: 1, lon: 1, radius: 25 });
   });
 
+  it("applies a changed number or costing without leaving the field, e.g. from the spinner", async () => {
+    const { sent } = serve();
+    const { map } = await setup();
+    click(map, 1, 1);
+    fireEvent.change(screen.getByRole("spinbutton", { name: "radius" }), {
+      target: { value: "30" },
+    });
+    await waitFor(() => expect(sent().at(-1).locations[0].radius).toBe(30));
+    await waitFor(() => expect(map.data("radius")!.features).toHaveLength(1));
+
+    fireEvent.change(screen.getByRole("combobox", { name: "costing" }), {
+      target: { value: "pedestrian" },
+    });
+    await waitFor(() => expect(sent().at(-1).costing).toBe("pedestrian"));
+  });
+
+  it("sends a typed number once, not on every keystroke", async () => {
+    const { fetch, sent } = serve();
+    const { user, map } = await setup();
+    click(map, 1, 1);
+    await user.type(screen.getByRole("spinbutton", { name: "radius" }), "100");
+    await waitFor(() => expect(sent().at(-1).locations[0].radius).toBe(100));
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
   it("shows what a typed request says, with options the locations disagree on as mixed", async () => {
     const { user } = await setup();
     await replaceRequest(
