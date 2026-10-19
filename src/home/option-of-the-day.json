@@ -1,12 +1,10 @@
 {
-  "id": "Pedestrian.elevator_penalty",
-  "name": "elevator_penalty",
-  "scope": "costing option · pedestrian, bikeshare",
-  "type": "number",
-  "default": 5,
-  "minimum": 0,
-  "maximum": 43200,
-  "description": "A penalty in seconds added to each transition via an elevator node or onto an elevator edge. Higher values apply larger cost penalties to avoid elevators.",
+  "id": "Location.rank_candidates",
+  "name": "rank_candidates",
+  "scope": "location option",
+  "type": "boolean",
+  "default": true,
+  "description": "Rank snap candidates by distance to input.",
   "badge": null,
   "notes": []
 }
