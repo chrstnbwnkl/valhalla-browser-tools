@@ -163,66 +163,76 @@ describe("locate playground", () => {
     rightClick(map, 1, 1);
     click(map, 2, 2, markers()[0]);
     expect(request().locations).toHaveLength(1);
-    expect(fetch).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 
-  it("collects right-clicked points, and sends them on Send or Ctrl+Enter", async () => {
-    const { fetch, sent } = serve();
-    const { user, map } = await setup();
+  it("sends whenever points are added, moved or removed", async () => {
+    const { sent } = serve();
+    const { map } = await setup();
     rightClick(map, 1, 1);
     rightClick(map, 2, 2);
-    expect(request().locations).toEqual([
-      { lat: 1, lon: 1 },
-      { lat: 2, lon: 2 },
+    expect(sent().map((r) => r.locations)).toEqual([
+      [{ lat: 1, lon: 1 }],
+      [
+        { lat: 1, lon: 1 },
+        { lat: 2, lon: 2 },
+      ],
     ]);
     expect(markers().map((m) => m.textContent)).toEqual(["1", "2"]);
-    expect(fetch).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole("button", { name: "Send" }));
-    expect(sent()[0].locations).toHaveLength(2);
-    await user.click(requestBox());
-    await user.keyboard("{Control>}{Enter}{/Control}");
-    expect(fetch).toHaveBeenCalledTimes(2);
-  });
-
-  it("sends again when a point is dragged after sending, not before", async () => {
-    const { fetch, sent } = serve();
-    const { map } = await setup();
-    rightClick(map, 1, 1);
-    const [marker] = map.markers;
-    act(() => marker!.drag([1.5, 1.5]));
-    expect(request().locations).toEqual([{ lat: 1.5, lon: 1.5 }]);
-    expect(fetch).not.toHaveBeenCalled();
-
-    click(map, 3, 3);
-    const [moved] = map.markers;
-    act(() => moved!.drag([4.1234567, 4]));
-    expect(sent().at(-1).locations).toEqual([{ lat: 4, lon: 4.123457 }]);
-  });
-
-  it("removes a right-clicked point and clears the results", async () => {
-    serve();
-    const { map } = await setup();
-    click(map, 13.4, 52.5);
-    await screen.findByRole("list", { name: "Results" });
-    rightClick(map, 1, 1);
-    expect(markers()).toHaveLength(2);
+    const [first] = map.markers;
+    act(() => first!.drag([4.1234567, 4]));
+    expect(sent().at(-1).locations).toEqual([
+      { lat: 4, lon: 4.123457 },
+      { lat: 2, lon: 2 },
+    ]);
 
     fireEvent.contextMenu(markers()[0]!);
-    expect(request().locations).toEqual([{ lat: 1, lon: 1 }]);
+    expect(request().locations).toEqual([{ lat: 2, lon: 2 }]);
+    expect(sent().at(-1).locations).toEqual([{ lat: 2, lon: 2 }]);
     expect(markers().map((m) => m.textContent)).toEqual(["1"]);
+  });
+
+  it("clears the results instead of sending once no points are left", async () => {
+    const { fetch } = serve();
+    const { user, map } = await setup();
+    click(map, 13.4, 52.5);
+    await screen.findByRole("list", { name: "Results" });
+    await user.click(screen.getByRole("button", { name: "Clear points" }));
+    expect(request().locations).toEqual([]);
+    expect(markers()).toHaveLength(0);
+    expect(fetch).toHaveBeenCalledTimes(1);
     expect(
       screen.queryByRole("list", { name: "Results" }),
     ).not.toBeInTheDocument();
     expect(map.data("edges")!.features).toHaveLength(0);
   });
 
-  it("clears the points", async () => {
-    const { user, map } = await setup();
-    rightClick(map, 1, 1);
-    await user.click(screen.getByRole("button", { name: "Clear points" }));
-    expect(request().locations).toEqual([]);
-    expect(markers()).toHaveLength(0);
+  it("sends typed JSON on Send, Ctrl+Enter or leaving the box, not while typing", async () => {
+    const { fetch, sent } = serve();
+    const { user } = await setup();
+    await replaceRequest(user, '{"locations": [{"lat": 1, "lon": 1}]}');
+    expect(fetch).not.toHaveBeenCalled();
+    await user.tab();
+    expect(sent()).toEqual([{ locations: [{ lat: 1, lon: 1 }] }]);
+
+    // leaving it unedited doesn't resend
+    await user.click(requestBox());
+    await user.tab();
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    await user.click(requestBox());
+    await user.keyboard("{Control>}{Enter}{/Control}");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    expect(fetch).toHaveBeenCalledTimes(3);
+  });
+
+  it("doesn't send invalid JSON when leaving the box", async () => {
+    const { fetch } = serve();
+    const { user } = await setup();
+    await replaceRequest(user, "{");
+    await user.tab();
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("sets an option on every location, and on the points added after", async () => {

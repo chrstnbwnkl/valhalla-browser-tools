@@ -77,8 +77,8 @@ export function App() {
   const [response, setResponse] = useState<LocateResult[] | null>(null);
   const [highlighted, setHighlighted] = useState<number | null>(null);
   const [showCircles, setShowCircles] = useState(false);
-  // after Send, edits resend until points are added or removed
-  const live = useRef(false);
+  // the JSON was typed into since the last send
+  const edited = useRef(false);
   const pending = useRef<AbortController | null>(null);
 
   useUrlParam(URL_PARAM, request && JSON.stringify(request));
@@ -117,6 +117,7 @@ export function App() {
     on = map,
   ) {
     if (!req) return setError(INVALID_REQUEST);
+    edited.current = false;
     void locate(req, server, on);
   }
 
@@ -128,7 +129,6 @@ export function App() {
     pending.current?.abort();
     const controller = new AbortController();
     pending.current = controller;
-    live.current = true;
     setError(null);
     setStatus("Requesting…");
     fitToPoints(req, on);
@@ -171,14 +171,17 @@ export function App() {
     return request;
   }
 
+  /** Writes a request edited through the UI and sends it, if it has points. */
   function change(next: LocateRequest) {
     write(next);
-    if (live.current) send(next);
+    if (locationsOf(next).length) send(next);
+    else clearResults();
   }
 
   function typed(value: string) {
     setText(value);
     setError(null);
+    edited.current = true;
   }
 
   function setOption(option: Option, raw: string) {
@@ -207,17 +210,12 @@ export function App() {
   function locateAt(lngLat: LngLat) {
     const req = editable();
     if (!req) return;
-    const next = { ...req, locations: [newLocation(lngLat, template)] };
-    write(next);
-    send(next);
+    change({ ...req, locations: [newLocation(lngLat, template)] });
   }
 
   function setLocations(next: Location[]) {
     const req = editable();
-    if (!req) return;
-    live.current = false;
-    clearResults();
-    write({ ...req, locations: next });
+    if (req) change({ ...req, locations: next });
   }
 
   function moveLocation(index: number, { lng, lat }: LngLat) {
@@ -237,7 +235,7 @@ export function App() {
         <ServerPicker
           servers={servers}
           onError={setError}
-          onSelect={(server) => live.current && send(request, server)}
+          onSelect={(server) => locations.length && send(request, server)}
         />
 
         <TextArea
@@ -248,6 +246,7 @@ export function App() {
           placeholder="The /locate request JSON…"
           value={text}
           onChange={(e) => typed(e.target.value)}
+          onBlur={() => edited.current && request && send()}
           onKeyDown={(e) => {
             if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) send();
           }}
@@ -282,8 +281,8 @@ export function App() {
           </Toggle>
         </div>
         <p className="mx-3 mt-2 mb-0 text-ink-muted">
-          Click the map to locate that point. Right-click to add points, then
-          Send. Drag a point to move it, right-click it to remove it.
+          Click the map to locate that point, right-click to add one. Drag a
+          point to move it, right-click it to remove it.
         </p>
         {(error ?? parseError) && (
           <p role="alert" className="mx-3 mt-2 mb-0 text-danger">
