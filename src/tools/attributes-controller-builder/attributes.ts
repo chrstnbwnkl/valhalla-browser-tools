@@ -111,13 +111,9 @@ export const DEFAULT_OFF: ReadonlySet<string> = new Set(
 
 export type Action = "include" | "exclude";
 
-/** A heading and the attributes listed under it. */
 export type Section = { name: string; attributes: string[] };
 
-/**
- * The groups with the attributes `pick` accepts, in Valhalla's order, then the selected attributes Valhalla
- * doesn't know (yet) as "custom". Empty groups are left out.
- */
+/** The groups filtered by `pick`, then unknown selected attributes as "custom". */
 export function sections(
   selected: ReadonlySet<string>,
   pick: (name: string) => boolean,
@@ -145,7 +141,6 @@ export const orderedSelection = (selected: ReadonlySet<string>) => [
   ...[...selected].filter((name) => !KNOWN.has(name)),
 ];
 
-/** The `filters` request parameter for the selection. */
 export const filterJson = (selected: ReadonlySet<string>, action: Action) =>
   JSON.stringify(
     { filters: { attributes: orderedSelection(selected), action } },

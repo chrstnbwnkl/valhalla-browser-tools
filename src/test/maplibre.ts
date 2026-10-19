@@ -1,5 +1,4 @@
-// A stand-in for maplibre-gl in tests (jsdom has no WebGL): it keeps what is added to the map, so tests can look
-// at sources, layers and markers, and lets them fire map events.
+// A fake maplibre-gl (jsdom has no WebGL) that records what is put on the map.
 
 type Listener = { type: string; layer?: string; fn: (e: unknown) => void };
 type LngLatLike = [number, number] | { lng: number; lat: number };

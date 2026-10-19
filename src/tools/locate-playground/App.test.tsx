@@ -292,14 +292,13 @@ describe("locate playground", () => {
     expect(request().verbose).toBe(false);
     expect(sent().at(-1).verbose).toBe(false);
 
-    const costing = screen.getByRole("combobox", { name: "costing" });
-    await user.clear(costing);
-    await user.type(costing, "bicycle");
-    await user.tab();
+    const costing = () => screen.getByRole("combobox", { name: "costing" });
+    await user.clear(costing());
+    await user.type(costing(), "bicycle{Enter}");
     expect(request().costing).toBe("bicycle");
     expect(sent().at(-1).costing).toBe("bicycle");
 
-    await user.clear(costing);
+    await user.clear(costing());
     await user.tab();
     expect(request()).not.toHaveProperty("costing");
   });
@@ -324,6 +323,7 @@ describe("locate playground", () => {
     expect(request()).toEqual(shared);
     await waitFor(() => expect(sent()).toEqual([shared]));
     expect(map.fitted!.contains([13.4, 52.5])).toBe(true);
+    expect(map.fitted!.contains([13.5, 52.5])).toBe(false);
     await screen.findByRole("list", { name: "Results" });
   });
 
@@ -441,9 +441,10 @@ describe("locate playground", () => {
       "http://localhost:9000/locate",
       expect.anything(),
     );
-    expect(JSON.parse(localStorage.getItem(SERVERS_KEY)!)).toEqual([
-      "http://localhost:9000",
-    ]);
+    expect(JSON.parse(localStorage.getItem(SERVERS_KEY)!)).toEqual({
+      added: ["http://localhost:9000"],
+      selected: "http://localhost:9000",
+    });
 
     await user.click(screen.getByRole("button", { name: "Remove" }));
     expect(

@@ -1,15 +1,8 @@
-/*
- * The design system for every React page: Tailwind, configured from the Waypoint tokens.
- *
- * assets/tokens.css stays the single source of the token values (it is generated from tokens.json and still
- * used by the legacy pages). It is imported into the base layer so its type classes (.label, .code, ...)
- * can be overridden by utilities; the theme below only maps the tokens onto Tailwind's names.
- */
+/* Tailwind themed with the Waypoint tokens from assets/tokens.css. */
 @import "tailwindcss";
 @import "../../assets/tokens.css" layer(base);
 
-/* Only the Waypoint palette exists: bg-surface, text-ink-muted, border-line, accent-green, ... They resolve
- * to the runtime variables, so light/dark switching stays with tokens.css. */
+/* only the Waypoint palette; resolved at runtime so light/dark keeps working */
 @theme inline {
   --color-*: initial;
   --color-surface: var(--surface);
@@ -39,9 +32,7 @@
   --color-link: var(--link);
 }
 
-/* Tokens whose names already match Tailwind's (--font-sans, --radius-md, --shadow-float, ...): registered
- * for the utilities but not emitted, so the values from tokens.css apply. Spacing needs nothing: Tailwind's
- * 4px step gives p-1 … p-16 the same values as --space-1 … --space-16. */
+/* names tokens.css already defines; spacing matches Tailwind's 4px steps */
 @theme reference {
   --font-*: initial;
   --font-display: var(--font-display);

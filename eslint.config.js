@@ -6,7 +6,6 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
-  // the tools not ported yet, and generated files
   globalIgnores(["dist", "assets", "route-playground"]),
   js.configs.recommended,
   tseslint.configs.recommendedTypeChecked,
@@ -31,7 +30,7 @@ export default defineConfig(
     },
   },
   {
-    // tests read JSON back and the MapLibre fake is loosely typed on purpose
+    // JSON.parse and the MapLibre fake are untyped
     files: ["**/*.test.{ts,tsx}", "src/test/**"],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
@@ -46,6 +45,5 @@ export default defineConfig(
     files: ["**/*.js"],
     extends: [tseslint.configs.disableTypeChecked],
   },
-  // formatting is Prettier's
   prettier,
 );

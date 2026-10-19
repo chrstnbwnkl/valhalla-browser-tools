@@ -8,7 +8,7 @@ import {
 } from "../../shared/map/geo";
 import type { ThemeColors } from "../../shared/theme/colors";
 
-// The parts of a /locate response used here; verbose responses add the optional ones.
+// what is used of a /locate response; verbose ones add the optional parts
 export type LocateEdge = {
   way_id?: number;
   correlated_lat: number;
@@ -36,7 +36,7 @@ export type LocateResult = {
   nodes?: LocateNode[] | null;
 };
 
-// one per location, in request order: the data series of the design system, without magenta, the highlight
+// one colour per location; magenta is for highlights
 const SERIES = ["green", "ink", "blue", "amber"] as const;
 export const seriesColor = (colors: ThemeColors, i: number) =>
   colors[SERIES[i % SERIES.length]!];
@@ -95,7 +95,6 @@ export function nodeRow(node: LocateNode): Pick<Row, "title" | "detail"> {
 export type Results = {
   sections: Section[];
   edges: Feature<LineString, Properties>[];
-  /** Bounding circles of verbose edges. */
   circles: Feature<Polygon, Properties>[];
   /** From each input point to what it was correlated with. */
   snaps: Feature<LineString, Properties>[];
@@ -103,7 +102,6 @@ export type Results = {
   points: Feature<Point, Properties>[];
 };
 
-/** The panel rows and map features for a response. */
 export function buildResults(
   data: LocateResult[],
   colors: ThemeColors,
@@ -167,7 +165,6 @@ export function buildResults(
   return results;
 }
 
-/** Total edges and nodes found. */
 export const counts = (data: LocateResult[]) => ({
   edges: data.reduce((sum, result) => sum + (result.edges?.length ?? 0), 0),
   nodes: data.reduce((sum, result) => sum + (result.nodes?.length ?? 0), 0),

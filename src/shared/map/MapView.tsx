@@ -5,35 +5,35 @@ import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { useEffect, useEffectEvent, useRef, type ReactNode } from "react";
 import { cn } from "../cn";
 import { useStoredState } from "../hooks/useStoredState";
-import { Toggle } from "../ui/Toggle";
 import { useDarkScheme } from "../theme/colors";
+import { Toggle } from "../ui/Toggle";
 import {
   BASEMAP_KEY,
   BASEMAP_LAYER,
-  COLOUR_BASEMAP,
   basemapPaint,
   basemapStyle,
 } from "./basemap";
 import { removedMaps, useMapState } from "./context";
 
-// MapLibre looks for its worker next to its own module, which bundling moves; point it at the copy Vite emits
+// bundling separates MapLibre from its worker
 setWorkerUrl(workerUrl);
 
+const isTrue = (raw: unknown) => raw === true;
+
 type Props = {
-  /** Read once, when the map is created. The style is the shared OSM basemap. */
+  /** Only read when the map is created. */
   options?: Omit<MapOptions, "container" | "style">;
-  className?: string;
-  /** Called with the map once it has loaded. */
   onLoad?: (map: MapLibreMap) => void;
-  /** Rendered once the map has loaded: layers, markers and the like, and overlays on the map. */
+  className?: string;
+  /** Rendered once the map has loaded. */
   children?: ReactNode;
 };
 
-/** A MapLibre map on the shared basemap, with its greyscale/colour switch. Needs a MapProvider around it. */
+/** A MapLibre map on the OSM basemap. Needs a MapProvider around it. */
 export function MapView({ options, onLoad, className, children }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const [map, setMap] = useMapState();
-  const [colour, setColour] = useStoredState(BASEMAP_KEY, COLOUR_BASEMAP);
+  const [colour, setColour] = useStoredState(BASEMAP_KEY, isTrue);
   const dark = useDarkScheme();
 
   const create = useEffectEvent(
@@ -70,7 +70,7 @@ export function MapView({ options, onLoad, className, children }: Props) {
 
   return (
     <div className={cn("relative", className)}>
-      {/* MapLibre makes it position: relative, so it is sized, not positioned */}
+      {/* sized, not positioned: MapLibre makes it position: relative */}
       <div ref={container} className="size-full" />
       <Toggle
         className="absolute top-4 left-1/2 z-[2] -translate-x-1/2 rounded-lg bg-surface-raised px-3 py-2 shadow-float"

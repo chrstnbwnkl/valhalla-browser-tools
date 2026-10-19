@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Card } from "../../shared/ui/Card";
 import { CopyButton } from "../../shared/ui/CopyButton";
 import { Input, TextArea } from "../../shared/ui/Input";
-import { json, useStoredState } from "../../shared/hooks/useStoredState";
+import { useStoredState } from "../../shared/hooks/useStoredState";
 import { AttributeList, ExtraItem } from "./AttributeList";
 import { KNOWN, filterJson, sections, type Action } from "./attributes";
 import { NO_MARKS } from "./marks";
@@ -11,7 +11,6 @@ export const STORAGE_KEY = "attributes-controller-builder:state";
 
 type Stored = { selected: string[]; action: Action };
 
-// accepts whatever an earlier version, or another tab, left in storage
 function parseStored(raw: unknown): Stored {
   const saved = raw as { selected?: unknown; action?: unknown } | null;
   return {
@@ -24,12 +23,10 @@ function parseStored(raw: unknown): Stored {
   };
 }
 
-const STORED = json(parseStored);
-
 const HEADER = "flex items-center gap-3 border-b border-line px-4 py-3";
 
 export function App() {
-  const [stored, setStored] = useStoredState(STORAGE_KEY, STORED);
+  const [stored, setStored] = useStoredState(STORAGE_KEY, parseStored);
   const selected = useMemo(() => new Set(stored.selected), [stored.selected]);
   const [filterInput, setFilterInput] = useState("");
   const [availableMarks, setAvailableMarks] = useState(NO_MARKS);
@@ -75,7 +72,7 @@ export function App() {
               autoFocus
               value={filterInput}
               onChange={(e) => setFilterInput(e.target.value)}
-              // Enter adds the only match, or the typed text as a custom attribute when nothing matches
+              // Enter adds the only match, or the text as a custom attribute
               onKeyDown={(e) => {
                 if (e.key !== "Enter") return;
                 if (availableNames.length === 1) addCustom(availableNames[0]!);

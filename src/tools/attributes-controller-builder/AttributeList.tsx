@@ -9,11 +9,10 @@ type Props = {
   sections: Section[];
   marks: Marks;
   onMarks: (marks: Marks) => void;
-  /** Hands over attributes to move to the other list. */
   onMove: (names: string[]) => void;
   moveLabel: string;
   empty: string;
-  /** Rendered above the sections, e.g. an item adding a custom attribute. */
+  /** e.g. an item adding a custom attribute */
   first?: ReactNode;
 };
 
@@ -83,7 +82,6 @@ export function AttributeList({
   );
 }
 
-/** An extra list item, styled like an attribute. */
 export function ExtraItem({
   children,
   note,

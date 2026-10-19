@@ -1,5 +1,4 @@
-// Ctrl/shift+click marks attributes in a list so they can be moved together; `anchor` is where a shift range
-// starts.
+// Ctrl/shift+click marks attributes to move together; shift ranges start at `anchor`.
 export type Marks = { marked: ReadonlySet<string>; anchor: string | null };
 
 export const NO_MARKS: Marks = { marked: new Set(), anchor: null };
@@ -10,10 +9,7 @@ export type Modifiers = {
   metaKey: boolean;
 };
 
-/**
- * What a click on `name` does, given the attributes the list currently `shown`: either it changes the marks,
- * or it moves attributes to the other list (everything marked if `name` is marked, else just `name`).
- */
+/** A click either changes the marks or moves attributes (all marked ones, if it hit one). */
 export function click(
   marks: Marks,
   name: string,

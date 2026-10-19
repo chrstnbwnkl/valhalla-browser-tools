@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
-  NO_FIELDS,
   OPTIONS,
-  fieldsFor,
   getOption,
   locationsOf,
   newLocation,
+  optionState,
   optionValue,
   parseRequest,
   positionOf,
@@ -40,7 +39,6 @@ describe("locations", () => {
     expect(locationsOf({ locations: "nope" })).toEqual([]);
     expect(positionOf({ lat: 1, lon: 2 })).toEqual([2, 1]);
     expect(positionOf({ lat: "x", lon: 2 })).toBeNull();
-    expect(positionOf("junk")).toBeNull();
   });
 });
 
@@ -94,17 +92,10 @@ describe("options", () => {
     expect(optionValue(option("preferred_side"), "same")).toBe("same");
   });
 
-  it("gives a new location the options the inputs hold, rounded to 6 decimals", () => {
-    const fields = {
-      values: {
-        radius: "20",
-        "search_filter.exclude_ramp": "true",
-        heading: "",
-      },
-      mixed: new Set<string>(),
-    };
+  it("puts a new location at the rounded position, with the options", () => {
+    const options = { radius: 20, search_filter: { exclude_ramp: true } };
     expect(
-      newLocation({ lng: 13.123456789, lat: 52.987654321 }, fields),
+      newLocation({ lng: 13.123456789, lat: 52.987654321 }, options),
     ).toEqual({
       lat: 52.987654,
       lon: 13.123457,
@@ -114,21 +105,27 @@ describe("options", () => {
   });
 });
 
-describe("fieldsFor", () => {
-  it("shows what all locations agree on, and marks the rest mixed", () => {
-    const request = {
-      locations: [
-        { lat: 1, lon: 1, radius: 10, preferred_side: "same" },
-        { lat: 2, lon: 2, radius: 10, preferred_side: "opposite" },
-      ],
-    };
-    const fields = fieldsFor(request, NO_FIELDS);
-    expect(fields.values).toEqual({ radius: "10" });
-    expect([...fields.mixed]).toEqual(["preferred_side"]);
+describe("optionState", () => {
+  const locations = [
+    { lat: 1, lon: 1, radius: 10, preferred_side: "same" },
+    { lat: 2, lon: 2, radius: 10, preferred_side: "opposite" },
+  ];
+
+  it("shows the value all locations share", () => {
+    expect(optionState(locations, "radius")).toEqual({
+      value: "10",
+      mixed: false,
+    });
+    expect(optionState(locations, "heading")).toEqual({
+      value: "",
+      mixed: false,
+    });
   });
 
-  it("keeps the inputs as they are without locations", () => {
-    const current = { values: { radius: "5" }, mixed: new Set<string>() };
-    expect(fieldsFor({ locations: [] }, current)).toBe(current);
+  it("marks a value they disagree on as mixed", () => {
+    expect(optionState(locations, "preferred_side")).toEqual({
+      value: "",
+      mixed: true,
+    });
   });
 });

@@ -15,7 +15,7 @@ type MapState = [
 
 const MapContext = createContext<MapState | null>(null);
 
-/** Makes the map of the MapView inside it available to everything inside it, e.g. a panel next to the map. */
+/** Shares the map of the MapView inside it, e.g. with a side panel. */
 export function MapProvider({ children }: { children: ReactNode }) {
   const state = useState<MapLibreMap | null>(null);
   return <MapContext value={state}>{children}</MapContext>;
@@ -27,16 +27,15 @@ export function useMapState() {
   return state;
 }
 
-/** The map, once it has loaded; null before. */
+/** Null until the map has loaded. */
 export const useMap = () => useMapState()[0];
 
-/** The loaded map, for the hooks of components rendered inside a MapView (which only renders them then). */
+/** For components inside a MapView, which only renders them once loaded. */
 export function useLoadedMap() {
   const map = useMap();
   if (!map) throw new Error("Only use this inside a <MapView>.");
   return map;
 }
 
-// Maps that are being or have been removed. React cleans up a MapView before its children, so their cleanup
-// has to skip what went with the map.
+// React cleans up a MapView before its children, which must then leave the removed map alone
 export const removedMaps = new WeakSet<MapLibreMap>();

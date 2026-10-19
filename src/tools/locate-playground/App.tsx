@@ -4,9 +4,9 @@ import {
   type Map as MapLibreMap,
 } from "maplibre-gl";
 import { useMemo, useRef, useState } from "react";
+import { readUrlParam, useUrlParam } from "../../shared/hooks/urlParam";
 import { useMap } from "../../shared/map/context";
 import { MapView } from "../../shared/map/MapView";
-import { readUrlParam, useUrlParam } from "../../shared/hooks/urlParam";
 import { useThemeColors } from "../../shared/theme/colors";
 import { Button } from "../../shared/ui/Button";
 import { CopyButton } from "../../shared/ui/CopyButton";
@@ -17,11 +17,8 @@ import { ServerPicker } from "../../shared/valhalla/ServerPicker";
 import { useServers } from "../../shared/valhalla/servers";
 import { LocateMap } from "./LocateMap";
 import { OptionFields } from "./OptionFields";
-import { ResultList } from "./ResultList";
 import {
   INVALID_REQUEST,
-  NO_FIELDS,
-  fieldsFor,
   isObject,
   locationsOf,
   newLocation,
@@ -29,17 +26,15 @@ import {
   parseRequest,
   positionOf,
   pretty,
-  rawLocations,
   withOption,
-  type Fields,
   type LocateRequest,
+  type Location,
   type Option,
 } from "./request";
+import { ResultList } from "./ResultList";
 import { buildResults, counts, type LocateResult } from "./results";
 
-// which server this tool uses; before the added servers were shared, it held this tool's own as well
-const SELECTED_SERVER_KEY = "locate-visualizer:servers";
-// the request travels in this URL parameter, the same one Valhalla itself accepts on GET requests
+// the parameter Valhalla itself accepts on GET requests
 export const URL_PARAM = "json";
 const DEFAULT_REQUEST = { locations: [], costing: "auto", verbose: true };
 const COSTINGS = [
@@ -53,22 +48,6 @@ const COSTINGS = [
   "truck",
 ];
 
-/** What the inputs above the options show; they follow the request when it is typed, pasted or opened. */
-type Controls = { costing: string; verbose: boolean; fields: Fields };
-
-function controlsFor(
-  request: LocateRequest | null,
-  current: Controls,
-): Controls {
-  if (!request) return current;
-  return {
-    costing: typeof request.costing === "string" ? request.costing : "",
-    verbose: request.verbose === true,
-    fields: fieldsFor(request, current.fields),
-  };
-}
-
-// the request the page opens with: the shared one from the URL, or a fresh one
 function initialText() {
   const shared = readUrlParam(URL_PARAM);
   if (shared === null) return { text: pretty(DEFAULT_REQUEST), shared: false };
@@ -82,39 +61,32 @@ function initialText() {
 export function App() {
   const map = useMap();
   const colors = useThemeColors();
-  const servers = useServers(SELECTED_SERVER_KEY);
+  const servers = useServers();
 
   const [initial] = useState(initialText);
   const [text, setText] = useState(initial.text);
-  const parsed = useMemo(() => parseRequest(text), [text]);
-  const { request } = parsed;
-  const [controls, setControls] = useState(() =>
-    controlsFor(parseRequest(initial.text).request, {
-      costing: "",
-      verbose: false,
-      fields: NO_FIELDS,
-    }),
+  const { request, error: parseError } = useMemo(
+    () => parseRequest(text),
+    [text],
   );
+  const locations = useMemo(() => locationsOf(request), [request]);
+  // the options new points get
+  const [template, setTemplate] = useState<Location>({});
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [response, setResponse] = useState<LocateResult[] | null>(null);
   const [highlighted, setHighlighted] = useState<number | null>(null);
   const [showCircles, setShowCircles] = useState(false);
-
-  // Once the request has been sent, changing an option or dragging a point sends it again. Adding or removing
-  // points turns that off until the next Send.
+  // after Send, edits resend until points are added or removed
   const live = useRef(false);
-  // the request was typed, pasted or came with the URL, so the map may not show its points yet
-  const unseen = useRef(initial.shared);
   const pending = useRef<AbortController | null>(null);
 
-  useUrlParam(URL_PARAM, request ? JSON.stringify(request) : null);
+  useUrlParam(URL_PARAM, request && JSON.stringify(request));
   const results = useMemo(
     () => (response ? buildResults(response, colors) : null),
     [response, colors],
   );
 
-  /** Replaces the request, from code. */
   const write = (next: LocateRequest) => setText(pretty(next));
 
   function clearResults() {
@@ -124,20 +96,21 @@ export function App() {
     setStatus("");
   }
 
-  // Moves the map to the points of a request that didn't come from clicking it, or that are out of view.
-  function showInputs(req: LocateRequest, on: MapLibreMap | null) {
-    const coords = rawLocations(req)
+  function fitToPoints(
+    req: LocateRequest,
+    on: MapLibreMap | null,
+    always = false,
+  ) {
+    const coords = locationsOf(req)
       .map(positionOf)
       .filter((at) => at !== null);
     if (!on || !coords.length) return;
     const bounds = on.getBounds();
-    if (!unseen.current && coords.every((at) => bounds.contains(at))) return;
-    unseen.current = false;
+    if (!always && coords.every((at) => bounds.contains(at))) return;
     const all = coords.reduce((b, at) => b.extend(at), new LngLatBounds());
     on.fitBounds(all, { padding: 80, maxZoom: 16, duration: 0 });
   }
 
-  /** Sends the request, to the server in use unless told otherwise, and shows the results. */
   function send(
     req: LocateRequest | null = request,
     server = servers.selected,
@@ -158,12 +131,12 @@ export function App() {
     live.current = true;
     setError(null);
     setStatus("Requesting…");
-    showInputs(req, on);
+    fitToPoints(req, on);
 
     const started = performance.now();
     let data: unknown;
     try {
-      // a string body is sent as text/plain, which spares the CORS preflight; Valhalla parses it as JSON anyway
+      // a string body is sent as text/plain, which avoids a CORS preflight
       const res = await fetch(`${server}/locate`, {
         method: "POST",
         body: JSON.stringify(req),
@@ -178,11 +151,11 @@ export function App() {
     if (controller.signal.aborted) return;
     if (!Array.isArray(data)) {
       clearResults();
-      const failure =
+      return setError(
         isObject(data) && typeof data.error === "string"
           ? `Error ${JSON.stringify(data.error_code)}: ${data.error}`
-          : null;
-      return setError(failure ?? "Unexpected response, see the network tab.");
+          : "Unexpected response, see the network tab.",
+      );
     }
     setResponse(data as LocateResult[]);
     setHighlighted(null);
@@ -192,13 +165,12 @@ export function App() {
     );
   }
 
-  /** The request to change, or null after saying it can't be. */
+  /** The request, or null after reporting that it doesn't parse. */
   function editable() {
     if (!request) setError(INVALID_REQUEST);
     return request;
   }
 
-  /** Writes a changed request and sends it again if the results follow it. */
   function change(next: LocateRequest) {
     write(next);
     if (live.current) send(next);
@@ -207,96 +179,56 @@ export function App() {
   function typed(value: string) {
     setText(value);
     setError(null);
-    unseen.current = true;
-    setControls((current) => controlsFor(parseRequest(value).request, current));
   }
 
   function setOption(option: Option, raw: string) {
     const req = editable();
     if (!req) return;
     const value = optionValue(option, raw);
-    setControls((current) => {
-      const mixed = new Set(current.fields.mixed);
-      mixed.delete(option.path);
-      return {
-        ...current,
-        fields: {
-          values: { ...current.fields.values, [option.path]: raw },
-          mixed,
-        },
-      };
-    });
+    setTemplate(withOption(template, option.path, value));
     change({
       ...req,
-      locations: rawLocations(req).map((l) =>
-        isObject(l) ? withOption(l, option.path, value) : l,
-      ),
+      locations: locations.map((l) => withOption(l, option.path, value)),
     });
   }
 
   function setCosting(value: string) {
     const req = editable();
     if (!req) return;
-    setControls((current) => ({ ...current, costing: value }));
     const { costing: _, ...rest } = req;
     change(value.trim() ? { ...req, costing: value.trim() } : rest);
   }
 
   function setVerbose(verbose: boolean) {
     const req = editable();
-    if (!req) return;
-    setControls((current) => ({ ...current, verbose }));
-    change({ ...req, verbose });
+    if (req) change({ ...req, verbose });
   }
 
   function locateAt(lngLat: LngLat) {
     const req = editable();
     if (!req) return;
-    const next = { ...req, locations: [newLocation(lngLat, controls.fields)] };
+    const next = { ...req, locations: [newLocation(lngLat, template)] };
     write(next);
     send(next);
   }
 
-  function addLocation(lngLat: LngLat) {
+  function setLocations(next: Location[]) {
     const req = editable();
     if (!req) return;
     live.current = false;
     clearResults();
-    write({
-      ...req,
-      locations: [...rawLocations(req), newLocation(lngLat, controls.fields)],
-    });
+    write({ ...req, locations: next });
   }
 
   function moveLocation(index: number, { lng, lat }: LngLat) {
     if (!request) return;
-    const locations = rawLocations(request).map((location, i) =>
-      i === index
-        ? {
-            ...(location as object),
-            lat: +lat.toFixed(6),
-            lon: +lng.toFixed(6),
-          }
-        : location,
-    );
-    change({ ...request, locations });
-  }
-
-  function removeLocation(index: number) {
-    if (!request) return;
-    clearResults();
-    write({
+    const moved = { lat: +lat.toFixed(6), lon: +lng.toFixed(6) };
+    change({
       ...request,
-      locations: rawLocations(request).filter((_, i) => i !== index),
+      locations: locations.map((l, i) =>
+        i === index ? { ...l, ...moved } : l,
+      ),
     });
-  }
-
-  function clearLocations() {
-    const req = editable();
-    if (!req) return;
-    live.current = false;
-    clearResults();
-    write({ ...req, locations: [] });
   }
 
   return (
@@ -324,7 +256,7 @@ export function App() {
           <Button variant="primary" title="Ctrl+Enter" onClick={() => send()}>
             Send
           </Button>
-          <Button onClick={clearLocations}>Clear points</Button>
+          <Button onClick={() => setLocations([])}>Clear points</Button>
           <CommitInput
             mono
             className="min-w-0 flex-1"
@@ -333,7 +265,7 @@ export function App() {
             placeholder="costing"
             title="costing"
             spellCheck={false}
-            value={controls.costing}
+            value={typeof request?.costing === "string" ? request.costing : ""}
             onCommit={setCosting}
           />
           <datalist id="costings">
@@ -343,7 +275,7 @@ export function App() {
           </datalist>
           <Toggle
             className="flex-none"
-            checked={controls.verbose}
+            checked={request?.verbose === true}
             onChange={(e) => setVerbose(e.target.checked)}
           >
             verbose
@@ -353,9 +285,9 @@ export function App() {
           Click the map to locate that point. Right-click to add points, then
           Send. Drag a point to move it, right-click it to remove it.
         </p>
-        {(error ?? parsed.error) && (
+        {(error ?? parseError) && (
           <p role="alert" className="mx-3 mt-2 mb-0 text-danger">
-            {error ?? parsed.error}
+            {error ?? parseError}
           </p>
         )}
         {status && (
@@ -375,7 +307,10 @@ export function App() {
                 — set on every location; empty uses the server default
               </small>
             </summary>
-            <OptionFields fields={controls.fields} onChange={setOption} />
+            <OptionFields
+              locations={locations.length ? locations : [template]}
+              onChange={setOption}
+            />
           </details>
           <div className="flex items-center justify-between gap-2 border-t border-line px-3 py-2">
             <Toggle
@@ -408,23 +343,26 @@ export function App() {
       <MapView
         className="flex-1"
         options={{ center: [10, 50], zoom: 3, dragRotate: false }}
-        // a shared request with points is sent right away, once the map can show where they are
-        onLoad={(loaded) =>
-          initial.shared &&
-          locationsOf(request).length &&
-          send(request, servers.selected, loaded)
-        }
+        onLoad={(loaded) => {
+          if (!initial.shared || !request) return;
+          fitToPoints(request, loaded, true);
+          if (locations.length) send(request, servers.selected, loaded);
+        }}
       >
         <LocateMap
-          locations={rawLocations(request)}
+          locations={locations}
           results={results}
           highlighted={highlighted}
           showCircles={showCircles}
           colors={colors}
           onClick={locateAt}
-          onContextMenu={addLocation}
+          onContextMenu={(lngLat) =>
+            setLocations([...locations, newLocation(lngLat, template)])
+          }
           onMoveLocation={moveLocation}
-          onRemoveLocation={removeLocation}
+          onRemoveLocation={(index) =>
+            setLocations(locations.filter((_, i) => i !== index))
+          }
           onHover={setHighlighted}
         />
       </MapView>

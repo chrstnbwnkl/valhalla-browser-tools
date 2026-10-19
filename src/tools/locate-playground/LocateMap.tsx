@@ -15,7 +15,7 @@ import {
 } from "../../shared/map/hooks";
 import { Marker } from "../../shared/map/Marker";
 import type { ThemeColors } from "../../shared/theme/colors";
-import { positionOf } from "./request";
+import { positionOf, type Location } from "./request";
 import { seriesColor, type Results } from "./results";
 
 const EMPTY = fc([]);
@@ -24,8 +24,7 @@ const COLOR: ["get", string] = ["get", "color"];
 const MARKER_CLASS = "input-marker";
 
 type Props = {
-  /** The request's locations, as they are. */
-  locations: unknown[];
+  locations: Location[];
   results: Results | null;
   highlighted: number | null;
   showCircles: boolean;
@@ -37,7 +36,6 @@ type Props = {
   onHover: (idx: number | null) => void;
 };
 
-/** What the locate playground draws on the map, and what it does with clicks on it. */
 export function LocateMap({
   locations,
   results,
@@ -57,13 +55,12 @@ export function LocateMap({
     map.getCanvas().style.cursor = "crosshair";
   }, [map]);
 
-  // the search radii of the input points, straight from the request
   const radii = useMemo(
     () =>
       fc(
         locations.flatMap((location, i) => {
           const at = positionOf(location);
-          const radius = (location as { radius?: unknown }).radius;
+          const { radius } = location;
           return at && typeof radius === "number" && radius > 0
             ? [circle(at, radius, { color: seriesColor(colors, i) })]
             : [];
@@ -202,7 +199,7 @@ export function LocateMap({
   useLayerEvent("mouseleave", "points", () => onHover(null));
 
   useMapEvent("click", (e) => {
-    // a click on a marker reaches the map too
+    // clicks on markers reach the map too
     if (
       (e.originalEvent.target as Element | null)?.closest?.(`.${MARKER_CLASS}`)
     )

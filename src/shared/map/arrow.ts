@@ -1,7 +1,4 @@
-/**
- * An arrowhead pointing right, which is where a symbol placed along a line faces the line's direction. Null where
- * there is no canvas (tests).
- */
+/** A right-pointing arrowhead for symbols along lines; null without a canvas. */
 export function arrowImage(
   size: number,
   fill: string,

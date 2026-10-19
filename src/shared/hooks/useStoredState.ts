@@ -1,61 +1,39 @@
 import { useCallback, useEffect, useState } from "react";
 
-/** How a value is kept in storage. Should be defined once, outside components, so it stays stable. */
-export type Codec<T> = {
-  /** Turns what is stored (null when nothing is, or something an older version wrote) into a valid value. */
-  read: (stored: string | null) => T;
-  write: (value: T) => string;
-};
-
-/** A codec storing JSON; `parse` gets the parsed value, or null when nothing is stored or it doesn't parse. */
-export function json<T>(parse: (raw: unknown) => T): Codec<T> {
-  return {
-    read: (stored) => {
-      let raw: unknown = null;
-      try {
-        raw = JSON.parse(stored ?? "null");
-      } catch {
-        // corrupt
-      }
-      return parse(raw);
-    },
-    write: (value) => JSON.stringify(value),
-  };
-}
-
-function read<T>(key: string, codec: Codec<T>): T {
-  let stored: string | null = null;
+function read<T>(key: string, parse: (raw: unknown) => T): T {
   try {
-    stored = localStorage.getItem(key);
+    return parse(JSON.parse(localStorage.getItem(key) ?? "null"));
   } catch {
-    // storage unavailable
+    return parse(null);
   }
-  return codec.read(stored);
 }
 
-/** State kept in localStorage under `key` and shared with other tabs. */
-export function useStoredState<T>(key: string, codec: Codec<T>) {
-  const [value, setValue] = useState(() => read(key, codec));
+/**
+ * State kept in localStorage as JSON and synced across tabs. `parse` turns
+ * what is stored (or null) into a valid value; it must be a stable function.
+ */
+export function useStoredState<T>(key: string, parse: (raw: unknown) => T) {
+  const [value, setValue] = useState(() => read(key, parse));
 
   const update = useCallback(
     (next: T) => {
       setValue(next);
       try {
-        localStorage.setItem(key, codec.write(next));
+        localStorage.setItem(key, JSON.stringify(next));
       } catch {
         // storage unavailable
       }
     },
-    [key, codec],
+    [key],
   );
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
-      if (e.key === key) setValue(read(key, codec));
+      if (e.key === key) setValue(read(key, parse));
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, [key, codec]);
+  }, [key, parse]);
 
   return [value, update] as const;
 }

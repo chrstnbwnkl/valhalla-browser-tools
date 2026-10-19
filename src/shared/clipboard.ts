@@ -1,4 +1,4 @@
-/** Copies text, falling back to execCommand where the Clipboard API is unavailable (e.g. not a secure context). */
+/** Falls back to execCommand where the Clipboard API is unavailable. */
 export async function copyText(text: string) {
   try {
     await navigator.clipboard.writeText(text);

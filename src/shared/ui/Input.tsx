@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useEffectEvent,
-  useRef,
-  useState,
-  type ComponentProps,
-} from "react";
+import type { ComponentProps } from "react";
 import { cn } from "../cn";
 
 const FIELD =
@@ -43,39 +37,20 @@ export function Select({ className, ...props }: ComponentProps<"select">) {
 
 type CommitInputProps = Omit<
   ComponentProps<typeof Input>,
-  "value" | "defaultValue" | "onChange"
+  "value" | "defaultValue" | "onChange" | "onBlur"
 > & {
   value: string;
-  /** Called with the value the user settled on: on Enter, on leaving the field, on picking a suggestion. */
   onCommit: (value: string) => void;
 };
 
-/**
- * An input reporting only committed values (the DOM's change event, which React's onChange is not), for fields
- * whose every change is expensive. It follows `value` when that changes from outside.
- */
+/** Reports its value when left or on Enter, not on every keystroke. */
 export function CommitInput({ value, onCommit, ...props }: CommitInputProps) {
-  const ref = useRef<HTMLInputElement>(null);
-  const [draft, setDraft] = useState(value);
-  const [outside, setOutside] = useState(value);
-  if (value !== outside) {
-    setOutside(value);
-    setDraft(value);
-  }
-
-  const commit = useEffectEvent(() => onCommit(ref.current!.value));
-  useEffect(() => {
-    const input = ref.current!;
-    const onChange = () => commit();
-    input.addEventListener("change", onChange);
-    return () => input.removeEventListener("change", onChange);
-  }, []);
-
   return (
     <Input
-      ref={ref}
-      value={draft}
-      onChange={(e) => setDraft(e.target.value)}
+      key={value}
+      defaultValue={value}
+      onBlur={(e) => e.target.value !== value && onCommit(e.target.value)}
+      onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
       {...props}
     />
   );

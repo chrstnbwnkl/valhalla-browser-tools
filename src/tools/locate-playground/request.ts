@@ -1,7 +1,5 @@
-// The /locate request, as edited in the text box, by the map and by the inputs.
-
 export type Json = Record<string, unknown>;
-/** A request: any JSON object, since the user may type anything Valhalla accepts. */
+/** Any JSON object: the user may type anything Valhalla accepts. */
 export type LocateRequest = Json;
 export type Location = Json;
 
@@ -13,7 +11,6 @@ export const isObject = (value: unknown): value is Json =>
 
 export const pretty = (value: unknown) => JSON.stringify(value, null, 2);
 
-/** The request in `text`, or why there is none. */
 export function parseRequest(
   text: string,
 ): { request: LocateRequest; error: null } | { request: null; error: string } {
@@ -27,26 +24,17 @@ export function parseRequest(
   }
 }
 
-/** The request's locations array as it is, objects or not. */
-export const rawLocations = (request: LocateRequest | null): unknown[] =>
-  Array.isArray(request?.locations) ? request.locations : [];
+export const locationsOf = (request: LocateRequest | null): Location[] =>
+  Array.isArray(request?.locations) ? request.locations.filter(isObject) : [];
 
-/** The locations that are objects, the only ones options apply to. */
-export const locationsOf = (request: LocateRequest | null) =>
-  rawLocations(request).filter(isObject);
-
-/** Where a location is, if it says so properly. */
-export function positionOf(
-  location: unknown,
-): [lon: number, lat: number] | null {
-  if (
-    !isObject(location) ||
-    !Number.isFinite(location.lat) ||
-    !Number.isFinite(location.lon)
-  )
-    return null;
-  return [location.lon as number, location.lat as number];
+export function positionOf({ lat, lon }: Location): [number, number] | null {
+  return typeof lat === "number" && typeof lon === "number" ? [lon, lat] : null;
 }
+
+export const newLocation = (
+  { lng, lat }: { lng: number; lat: number },
+  options: Location,
+): Location => ({ lat: +lat.toFixed(6), lon: +lng.toFixed(6), ...options });
 
 const ROAD_CLASSES = [
   "motorway",
@@ -61,8 +49,8 @@ const ROAD_CLASSES = [
 const BOOLEAN = ["true", "false"];
 
 /**
- * A per-location option that gets an input. `values` makes it a select, anything else is a number; a dotted path
- * is a key inside a nested object. `hint` is the server default.
+ * A per-location option with an input: a select with `values`, a number
+ * otherwise. `hint` is the server default; a dotted path is nested.
  */
 export type Option = { path: string; values?: string[]; hint?: string };
 
@@ -92,12 +80,12 @@ export const OPTIONS: Option[] = [
 
 export function getOption(location: Location, path: string): unknown {
   const [key = "", sub] = path.split(".");
-  if (!sub) return location[key];
-  const group = location[key];
-  return isObject(group) ? group[sub] : undefined;
+  const value = location[key];
+  if (!sub) return value;
+  return isObject(value) ? value[sub] : undefined;
 }
 
-/** A copy of `location` with the option set; `undefined` removes it, and a group it leaves empty. */
+/** A copy with the option set; `undefined` removes it, and a group it empties. */
 export function withOption(
   location: Location,
   path: string,
@@ -105,17 +93,14 @@ export function withOption(
 ): Location {
   const [key = "", sub] = path.split(".");
   const next = { ...location };
-  if (!sub) {
-    if (value === undefined) delete next[key];
-    else next[key] = value;
-    return next;
+  if (sub) {
+    const group = isObject(next[key]) ? { ...next[key] } : {};
+    if (value === undefined) delete group[sub];
+    else group[sub] = value;
+    value = Object.keys(group).length ? group : undefined;
   }
-  const current = next[key];
-  const group: Json = isObject(current) ? { ...current } : {};
-  if (value === undefined) delete group[sub];
-  else group[sub] = value;
-  if (Object.keys(group).length) next[key] = group;
-  else delete next[key];
+  if (value === undefined) delete next[key];
+  else next[key] = value;
   return next;
 }
 
@@ -126,49 +111,20 @@ export function optionValue(option: Option, raw: string): unknown {
   return raw === "true" ? true : raw === "false" ? false : raw;
 }
 
-/** A location at `lngLat` with the options the inputs hold. */
-export function newLocation(
-  lngLat: { lng: number; lat: number },
-  fields: Fields,
-): Location {
-  let location: Location = {
-    lat: +lngLat.lat.toFixed(6),
-    lon: +lngLat.lng.toFixed(6),
+/** What an option's input shows: the value all locations share, or mixed. */
+export function optionState(locations: Location[], path: string) {
+  const seen = new Set(
+    locations.map((location) => JSON.stringify(getOption(location, path))),
+  );
+  if (seen.size > 1) return { value: "", mixed: true };
+  const value = locations[0] && getOption(locations[0], path);
+  return {
+    value:
+      value === undefined
+        ? ""
+        : typeof value === "string"
+          ? value
+          : JSON.stringify(value),
+    mixed: false,
   };
-  for (const option of OPTIONS) {
-    const value = optionValue(option, fields.values[option.path] ?? "");
-    if (value !== undefined)
-      location = withOption(location, option.path, value);
-  }
-  return location;
-}
-
-/**
- * What the option inputs show: the text of each, by path, and the options the locations disagree on. A mixed
- * option shows empty and stays untouched until the user sets it.
- */
-export type Fields = {
-  values: Record<string, string>;
-  mixed: ReadonlySet<string>;
-};
-
-export const NO_FIELDS: Fields = { values: {}, mixed: new Set() };
-
-/** The inputs showing what the request says. Without locations, they keep what they hold, for the first point. */
-export function fieldsFor(request: LocateRequest, current: Fields): Fields {
-  const all = locationsOf(request);
-  const [first] = all;
-  if (!first) return current;
-  const values: Record<string, string> = {};
-  const mixed = new Set<string>();
-  for (const { path } of OPTIONS) {
-    const seen = new Set(
-      all.map((location) => JSON.stringify(getOption(location, path))),
-    );
-    const value = getOption(first, path);
-    if (seen.size > 1) mixed.add(path);
-    else if (value !== undefined)
-      values[path] = typeof value === "string" ? value : JSON.stringify(value);
-  }
-  return { values, mixed };
 }

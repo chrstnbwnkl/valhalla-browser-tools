@@ -1,7 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import {
-  CUSTOM_SERVERS,
   PRESET_SERVERS,
   SERVERS_KEY,
   normalizeServer,
@@ -25,50 +24,21 @@ describe("normalizeServer", () => {
   });
 });
 
-describe("stored servers", () => {
-  it("keeps only added servers", () => {
-    expect(
-      CUSTOM_SERVERS.read(JSON.stringify(["http://a", PRESET_SERVERS[0], 3])),
-    ).toEqual(["http://a"]);
-    expect(CUSTOM_SERVERS.read("not json")).toEqual([]);
-  });
-
-  it("starts from the tools' own lists when nothing is shared yet", () => {
-    localStorage.setItem(
-      "locate-visualizer:servers",
-      JSON.stringify({ custom: ["http://a", "http://b"] }),
-    );
-    localStorage.setItem(
-      "route-debugger:servers",
-      JSON.stringify({ custom: ["http://b", "http://c"] }),
-    );
-    expect(CUSTOM_SERVERS.read(null)).toEqual([
-      "http://a",
-      "http://b",
-      "http://c",
-    ]);
-  });
-});
-
 describe("useServers", () => {
-  const KEY = "tool:servers";
-
   it("starts on the first preset", () => {
-    const { result } = renderHook(() => useServers(KEY));
+    const { result } = renderHook(() => useServers());
     expect(result.current.selected).toBe(PRESET_SERVERS[0]);
     expect(result.current.all).toEqual(PRESET_SERVERS);
     expect(result.current.removable).toBe(false);
   });
 
   it("adds, selects and forgets servers, and stores them", () => {
-    const { result } = renderHook(() => useServers(KEY));
+    const { result } = renderHook(() => useServers());
     act(() => result.current.add("http://mine"));
     expect(result.current.selected).toBe("http://mine");
     expect(result.current.removable).toBe(true);
-    expect(JSON.parse(localStorage.getItem(SERVERS_KEY)!)).toEqual([
-      "http://mine",
-    ]);
-    expect(JSON.parse(localStorage.getItem(KEY)!)).toEqual({
+    expect(JSON.parse(localStorage.getItem(SERVERS_KEY)!)).toEqual({
+      added: ["http://mine"],
       selected: "http://mine",
     });
 
@@ -77,9 +47,13 @@ describe("useServers", () => {
     expect(result.current.selected).toBe(PRESET_SERVERS[0]);
   });
 
-  it("falls back to the first preset when the stored one is gone", () => {
-    localStorage.setItem(KEY, JSON.stringify({ selected: "http://removed" }));
-    const { result } = renderHook(() => useServers(KEY));
+  it("ignores stored junk", () => {
+    localStorage.setItem(
+      SERVERS_KEY,
+      JSON.stringify({ added: ["http://a", 3], selected: "http://gone" }),
+    );
+    const { result } = renderHook(() => useServers());
+    expect(result.current.all).toEqual([...PRESET_SERVERS, "http://a"]);
     expect(result.current.selected).toBe(PRESET_SERVERS[0]);
   });
 });

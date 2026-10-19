@@ -58,7 +58,7 @@ export function circle(
   };
 }
 
-/** Decodes an encoded polyline (Valhalla uses precision 6) into [lon, lat] positions. */
+/** Decodes a polyline into [lon, lat] positions; Valhalla uses precision 6. */
 export function decodePolyline(str: string, precision = 6): Position[] {
   const factor = 10 ** precision;
   const coords: Position[] = [];

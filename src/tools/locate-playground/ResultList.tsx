@@ -10,7 +10,6 @@ type Props = {
   onHover: (idx: number | null) => void;
 };
 
-/** The correlated edges and nodes, under the location they were found for. */
 export function ResultList({ sections, highlighted, onHover }: Props) {
   const rows = useRef(new Map<number, HTMLElement>());
 
@@ -62,7 +61,7 @@ type RowProps = {
 };
 
 function ResultRow({ ref, row, color, active, onHover }: RowProps) {
-  // verbose edges are large, so only render the JSON of those that get opened
+  // verbose edges are large, so render JSON only once opened
   const [opened, setOpened] = useState(false);
 
   return (

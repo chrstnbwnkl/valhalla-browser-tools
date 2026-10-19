@@ -5,16 +5,13 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 
-// Every page Vite builds. A tool is added here once it is ported to React; its index.html stays at the
-// same path as before so shared links keep working.
 const PAGES = [
   "index.html",
   "attributes-controller-builder/index.html",
   "locate-playground/index.html",
 ];
 
-// Tools not ported yet are plain HTML + JS. The dev server serves them from the repo as they are; the build
-// copies them over unchanged.
+// not ported yet: served and copied as they are
 const LEGACY = ["assets", "route-playground"];
 
 function legacy(): Plugin {
@@ -37,16 +34,15 @@ function legacy(): Plugin {
 }
 
 export default defineConfig({
-  // relative, so the site works under /valhalla-browser-tools/ on Pages as well as on any other path
+  // works under any path, e.g. /valhalla-browser-tools/
   base: "./",
   plugins: [react(), tailwindcss(), legacy()],
   build: {
-    // keeps the bundles apart from the legacy assets/ folder
+    // apart from the legacy assets/
     assetsDir: "static",
     rolldownOptions: {
       input: PAGES.map((page) => resolve(import.meta.dirname, page)),
       output: {
-        // the big libraries in chunks of their own, cached across the tools that share them
         codeSplitting: {
           groups: [
             { name: "maplibre", test: /node_modules[\\/].*maplibre-gl/ },
@@ -58,7 +54,7 @@ export default defineConfig({
         },
       },
     },
-    // MapLibre alone is about 1 MB and can't be split further
+    // MapLibre alone is ~1 MB
     chunkSizeWarningLimit: 1200,
   },
   test: {

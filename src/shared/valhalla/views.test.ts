@@ -1,32 +1,24 @@
+import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { VIEWS, withView, type View } from "./views";
+import { VIEWS_KEY, useViews, withView, type View } from "./views";
 
 const berlin: View = { name: "Berlin", center: [13.4, 52.5], zoom: 11 };
 const paris: View = { name: "Paris", center: [2.35, 48.85], zoom: 12 };
 
-describe("stored views", () => {
-  it("drops what is not a view", () => {
-    const stored = JSON.stringify([
-      berlin,
-      { name: "x" },
-      { name: "y", center: ["a", 1], zoom: 3 },
-      null,
-    ]);
-    expect(VIEWS.read(stored)).toEqual([berlin]);
-    expect(VIEWS.read("{")).toEqual([]);
-  });
-
-  it("starts from the tools' own views when nothing is shared yet, the first of a name winning", () => {
-    localStorage.setItem("locate-visualizer:views", JSON.stringify([berlin]));
+describe("views", () => {
+  it("drops stored entries that are not views", () => {
     localStorage.setItem(
-      "route-debugger:views",
-      JSON.stringify([{ ...berlin, zoom: 3 }, paris]),
+      VIEWS_KEY,
+      JSON.stringify([
+        berlin,
+        { name: "x" },
+        { name: "y", center: ["a", 1], zoom: 3 },
+        null,
+      ]),
     );
-    expect(VIEWS.read(null)).toEqual([berlin, paris]);
+    expect(renderHook(() => useViews()).result.current[0]).toEqual([berlin]);
   });
-});
 
-describe("withView", () => {
   it("appends a new name and replaces an existing one in place", () => {
     expect(withView([berlin], paris)).toEqual([berlin, paris]);
     const moved = { ...berlin, zoom: 5 };

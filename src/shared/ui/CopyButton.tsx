@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { copyText } from "../clipboard";
 import { Button, type ButtonProps } from "./Button";
 
-/** Copies `text` on click and says so for a moment. */
 export function CopyButton({
   text,
   children = "Copy",

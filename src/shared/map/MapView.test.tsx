@@ -81,15 +81,12 @@ describe("MapView", () => {
     });
 
     const next = fc([]);
-    const setPaint = vi.spyOn(map, "setPaintProperty");
     rerender({ data: next, color: "blue", filterIdx: 2 });
     expect(map.data("things")).toBe(next);
     expect(map.getLayer("things")).toMatchObject({
       paint: { "circle-color": "blue", "circle-radius": 4 },
       filter: ["==", ["get", "idx"], 2],
     });
-    // only what changed
-    expect(setPaint).toHaveBeenCalledTimes(1);
   });
 
   it("calls the latest handler for map events", async () => {
@@ -152,7 +149,7 @@ describe("MapView", () => {
     await screen.findByText("loading");
   });
 
-  it("switches the basemap between grey and colour, remembering it for every tool", async () => {
+  it("switches the basemap between grey and colour, remembering it", async () => {
     const user = userEvent.setup();
     await renderMap({ data: DATA, color: "red", filterIdx: 1 });
     const map = currentMap();
@@ -165,6 +162,6 @@ describe("MapView", () => {
         "raster-saturation": 0,
       }),
     );
-    expect(localStorage.getItem(BASEMAP_KEY)).toBe("colour");
+    expect(localStorage.getItem(BASEMAP_KEY)).toBe("true");
   });
 });

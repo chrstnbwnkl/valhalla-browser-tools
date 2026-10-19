@@ -1,21 +1,19 @@
 import { Fragment } from "react";
 import { CommitInput, Select } from "../../shared/ui/Input";
-import { OPTIONS, type Fields, type Option } from "./request";
+import { OPTIONS, optionState, type Location, type Option } from "./request";
 
 type Props = {
-  fields: Fields;
+  locations: Location[];
   onChange: (option: Option, raw: string) => void;
 };
 
-/** An input for each per-location option, set on every location at once. */
-export function OptionFields({ fields, onChange }: Props) {
+export function OptionFields({ locations, onChange }: Props) {
   return (
     <div className="grid grid-cols-2 gap-x-3 gap-y-2 px-3 pt-2 pb-3">
       {OPTIONS.map((option, i) => {
         const [key = "", sub] = option.path.split(".");
         const group = sub && OPTIONS[i - 1]?.path.split(".")[0] !== key;
-        const mixed = fields.mixed.has(option.path);
-        const value = mixed ? "" : (fields.values[option.path] ?? "");
+        const { value, mixed } = optionState(locations, option.path);
         return (
           <Fragment key={option.path}>
             {group && (

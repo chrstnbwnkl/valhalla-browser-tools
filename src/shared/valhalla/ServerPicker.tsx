@@ -5,13 +5,11 @@ import { normalizeServer, type Servers } from "./servers";
 
 type Props = {
   servers: Servers;
-  /** Called with the server now in use, after the user picked, added or removed one. */
+  /** Called with the server in use after any change. */
   onSelect: (url: string) => void;
-  /** Called with a problem to show, or null once there is none. */
   onError: (message: string | null) => void;
 };
 
-/** Picks the Valhalla server, adds one or forgets one. */
 export function ServerPicker({ servers, onSelect, onError }: Props) {
   const [url, setUrl] = useState("");
 

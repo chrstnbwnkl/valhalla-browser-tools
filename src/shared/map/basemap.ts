@@ -1,17 +1,9 @@
 import type { MapOptions } from "maplibre-gl";
-import type { Codec } from "../hooks/useStoredState";
 
-// The OSM tiles, in high-contrast greyscale (inverted for the dark theme) so only what is drawn on top has
-// colour; the toggle on the map brings back their own colours, for every tool.
-export const BASEMAP_KEY = "valhalla-browser-tools:basemap";
+export const BASEMAP_KEY = "valhalla-browser-tools:color-basemap";
 export const BASEMAP_LAYER = "osm";
 
-// stored as a bare word, which the tools not ported yet read too
-export const COLOUR_BASEMAP: Codec<boolean> = {
-  read: (stored) => stored === "colour",
-  write: (colour) => (colour ? "colour" : "grey"),
-};
-
+/** Greyscale (inverted when dark) so what's drawn on top stands out, or the tiles' own colours. */
 export function basemapPaint(colour: boolean, dark: boolean) {
   if (colour)
     return {
@@ -20,19 +12,12 @@ export function basemapPaint(colour: boolean, dark: boolean) {
       "raster-brightness-max": 1,
       "raster-contrast": 0,
     };
-  return dark
-    ? {
-        "raster-saturation": -1,
-        "raster-brightness-min": 0.9,
-        "raster-brightness-max": 0.04,
-        "raster-contrast": 0.1,
-      }
-    : {
-        "raster-saturation": -1,
-        "raster-brightness-min": 0.08,
-        "raster-brightness-max": 1,
-        "raster-contrast": 0.1,
-      };
+  return {
+    "raster-saturation": -1,
+    "raster-brightness-min": dark ? 0.9 : 0.08,
+    "raster-brightness-max": dark ? 0.04 : 1,
+    "raster-contrast": 0.1,
+  };
 }
 
 export const basemapStyle = (

@@ -4,7 +4,7 @@ import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { useViews, withView } from "./views";
 
-/** The saved map views, to jump to, and a form saving the current one. Saving under a name that exists replaces it. */
+/** Saving under an existing name replaces that view. */
 export function SavedViews() {
   const map = useMap();
   const [views, setViews] = useViews();

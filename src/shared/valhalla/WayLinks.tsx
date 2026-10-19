@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 
-/** `text` with every way id in it ("way_id": 123, way_id: 123, way 123) as a link to the way on openstreetmap.org. */
+/** Links the way ids in `text` ("way_id": 123, way 123, …) to openstreetmap.org. */
 export function WayLinks({ text }: { text: string }) {
   const parts = [];
   let last = 0;

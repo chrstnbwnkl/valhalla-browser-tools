@@ -2,7 +2,6 @@ import { useMemo, useSyncExternalStore } from "react";
 
 const DARK = "(prefers-color-scheme: dark)";
 
-/** Whether the OS asks for the dark theme. */
 export function useDarkScheme() {
   return useSyncExternalStore(
     (onChange) => {
@@ -14,7 +13,6 @@ export function useDarkScheme() {
   );
 }
 
-// the colour tokens of the design system (see assets/tokens.css)
 const TOKENS = [
   "surface",
   "surface-raised",
@@ -42,14 +40,11 @@ const TOKENS = [
 export type ColorToken = (typeof TOKENS)[number];
 export type ThemeColors = Record<ColorToken, string>;
 
-/**
- * The resolved colours of the design system, for what CSS can't reach, like map layers and canvases. They change
- * with the theme, so whatever is drawn with them should depend on the returned object.
- */
+/** The theme's colours, for map layers and canvases, which CSS can't reach. */
 export function useThemeColors(): ThemeColors {
   const dark = useDarkScheme();
   return useMemo(() => {
-    void dark; // read again whenever the theme changes
+    void dark; // re-read on theme change
     const style = getComputedStyle(document.documentElement);
     return Object.fromEntries(
       TOKENS.map((name) => [name, style.getPropertyValue(`--${name}`).trim()]),

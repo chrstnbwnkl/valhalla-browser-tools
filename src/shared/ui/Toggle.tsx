@@ -1,7 +1,6 @@
 import type { ComponentProps } from "react";
 import { cn } from "../cn";
 
-/** A checkbox drawn as a switch, with its label. */
 export function Toggle({
   className,
   children,

@@ -13,13 +13,11 @@ type Props = {
   lngLat: [lon: number, lat: number];
   draggable?: boolean;
   onDragEnd?: (lngLat: LngLat) => void;
-  /** A native listener, so it runs before the map's own: stopping the event keeps it from the map. */
+  /** A native listener, so stopping the event keeps it from the map. */
   onContextMenu?: (e: MouseEvent) => void;
-  /** What the marker looks like. */
   children: ReactNode;
 };
 
-/** A MapLibre marker showing `children`. */
 export function Marker({
   lngLat,
   draggable = false,
@@ -52,8 +50,7 @@ export function Marker({
 
   const contextMenu = useEffectEvent((e: MouseEvent) => onContextMenu?.(e));
   useEffect(() => {
-    // MapLibre starts a drag on any button, and a right-click's release lands on the context menu, not the map,
-    // so the drag would never end and the next click on the map would move the marker there
+    // only left-button drags; a right-click's drag would never end
     const onMouseDown = (e: MouseEvent) => {
       if (e.button !== 0) e.stopPropagation();
     };
