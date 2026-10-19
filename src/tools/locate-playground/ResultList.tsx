@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { useScrollToRow } from "../../shared/hooks/useScrollToRow";
 import { cn } from "../../shared/cn";
 import { WayLinks } from "../../shared/valhalla/WayLinks";
-import { pretty } from "./request";
+import { pretty } from "../../shared/valhalla/request";
 import type { Row, Section } from "./results";
 
 type Props = {
@@ -11,13 +12,7 @@ type Props = {
 };
 
 export function ResultList({ sections, highlighted, onHover }: Props) {
-  const rows = useRef(new Map<number, HTMLElement>());
-
-  // follow what the map highlights
-  useEffect(() => {
-    if (highlighted !== null)
-      rows.current.get(highlighted)?.scrollIntoView?.({ block: "nearest" });
-  }, [highlighted]);
+  const rowRef = useScrollToRow(highlighted);
 
   return (
     <ul aria-label="Results" className="m-0 list-none p-0">
@@ -36,10 +31,7 @@ export function ResultList({ sections, highlighted, onHover }: Props) {
         ...section.rows.map((row) => (
           <li key={row.idx}>
             <ResultRow
-              ref={(element) => {
-                if (element) rows.current.set(row.idx, element);
-                else rows.current.delete(row.idx);
-              }}
+              ref={rowRef(row.idx)}
               row={row}
               color={section.color}
               active={row.idx === highlighted}

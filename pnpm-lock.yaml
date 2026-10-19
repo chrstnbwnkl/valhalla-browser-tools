@@ -23,6 +23,12 @@ importers:
       tailwind-merge:
         specifier: ^3.7.0
         version: 3.7.0
+      terra-draw:
+        specifier: ^1.38.0
+        version: 1.38.0
+      terra-draw-maplibre-gl-adapter:
+        specifier: ^1.5.0
+        version: 1.5.0(maplibre-gl@6.15.0)(terra-draw@1.38.0)
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
@@ -1393,6 +1399,15 @@ packages:
   tapable@2.3.3:
     resolution: {integrity: sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A==}
     engines: {node: '>=6'}
+
+  terra-draw-maplibre-gl-adapter@1.5.0:
+    resolution: {integrity: sha512-wUv7WDIKln+cWkJOJZ68cOLwFhcBXlSN3GF56Dx8GLnmTTnQEZbIyzWRHjsxhn+TOXvxBOlCDl5JmCghIW3L4g==}
+    peerDependencies:
+      maplibre-gl: '>=4'
+      terra-draw: ^1.0.0
+
+  terra-draw@1.38.0:
+    resolution: {integrity: sha512-h7bD5/mIN/t1qNKmPLqwZvsHnwtZpvFWo49PGA3n7CzM28lyc/xcMl85xWNOMBgF0Tq20UT06+KlBJ7g7B24rg==}
 
   tinybench@6.2.2:
     resolution: {integrity: sha512-nIZ2N2dFpjBsg2hgitKu7mA+FvsIJuGJOwysRngmVRRmWgR/UyPjwJj8c/fT/dhm8EkHnF5EOogRf+0Z2qrimA==}
@@ -2791,6 +2806,13 @@ snapshots:
   tailwindcss@4.3.3: {}
 
   tapable@2.3.3: {}
+
+  terra-draw-maplibre-gl-adapter@1.5.0(maplibre-gl@6.15.0)(terra-draw@1.38.0):
+    dependencies:
+      maplibre-gl: 6.15.0
+      terra-draw: 1.38.0
+
+  terra-draw@1.38.0: {}
 
   tinybench@6.2.2: {}
 

@@ -6,7 +6,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
-  globalIgnores(["dist", "assets", "route-playground"]),
+  globalIgnores(["dist", "assets"]),
   js.configs.recommended,
   tseslint.configs.recommendedTypeChecked,
   reactHooks.configs.flat["recommended-latest"],
@@ -36,6 +36,7 @@ export default defineConfig(
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
       "@typescript-eslint/no-unsafe-member-access": "off",
       "@typescript-eslint/no-unsafe-return": "off",
       "@typescript-eslint/require-await": "off",

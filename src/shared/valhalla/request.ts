@@ -46,15 +46,23 @@ const ROAD_CLASSES = [
   "residential",
   "service_other",
 ];
-const BOOLEAN = ["true", "false"];
+export const BOOLEAN = ["true", "false"];
 
 /**
- * A per-location option with an input: a select with `values`, a number
- * otherwise. `hint` is the server default; a dotted path is nested.
+ * An option with an input: a select with `values`, a number otherwise.
+ * `hint` is the server default. A dotted path is nested, and grouped by its
+ * first part unless `group` says otherwise.
  */
-export type Option = { path: string; values?: string[]; hint?: string };
+export type Option = {
+  path: string;
+  values?: string[];
+  hint?: string;
+  title?: string;
+  group?: string;
+};
 
-export const OPTIONS: Option[] = [
+/** How a location is correlated with the graph. */
+export const CORRELATION_OPTIONS: Option[] = [
   { path: "radius", hint: "0 m" },
   { path: "search_cutoff", hint: "35000 m" },
   { path: "minimum_reachability", hint: "50 edges" },
@@ -67,6 +75,9 @@ export const OPTIONS: Option[] = [
   { path: "preferred_side", values: ["either", "same", "opposite"] },
   { path: "rank_candidates", values: BOOLEAN },
   { path: "preferred_layer", hint: "none" },
+];
+
+export const SEARCH_FILTER_OPTIONS: Option[] = [
   { path: "search_filter.min_road_class", values: ROAD_CLASSES },
   { path: "search_filter.max_road_class", values: ROAD_CLASSES },
   { path: "search_filter.exclude_tunnel", values: BOOLEAN },
@@ -76,6 +87,12 @@ export const OPTIONS: Option[] = [
   { path: "search_filter.exclude_ferry", values: BOOLEAN },
   { path: "search_filter.exclude_closures", values: BOOLEAN },
   { path: "search_filter.level", hint: "none" },
+];
+
+/** The options of locations that only get correlated, as in /locate. */
+export const LOCATION_OPTIONS = [
+  ...CORRELATION_OPTIONS,
+  ...SEARCH_FILTER_OPTIONS,
 ];
 
 export function getOption(location: Location, path: string): unknown {

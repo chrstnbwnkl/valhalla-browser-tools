@@ -1,11 +1,9 @@
 import type { LngLat, MapLayerMouseEvent } from "maplibre-gl";
-import { NavigationControl, ScaleControl } from "maplibre-gl";
 import { useEffect, useMemo } from "react";
 import { arrowImage } from "../../shared/map/arrow";
 import { useLoadedMap } from "../../shared/map/context";
 import { circle, fc } from "../../shared/map/geo";
 import {
-  useControl,
   useGeoJSONSource,
   useLayer,
   useLayerEvent,
@@ -16,8 +14,14 @@ import {
 import { Marker } from "../../shared/map/Marker";
 import { Popup } from "../../shared/map/Popup";
 import type { ThemeColors } from "../../shared/theme/colors";
-import { OptionFields } from "./OptionFields";
-import { positionOf, type Location, type Option } from "./request";
+import { OptionFields } from "../../shared/valhalla/OptionFields";
+import {
+  LOCATION_OPTIONS,
+  optionState,
+  positionOf,
+  type Location,
+  type Option,
+} from "../../shared/valhalla/request";
 import { seriesColor, type Results } from "./results";
 
 const EMPTY = fc([]);
@@ -58,8 +62,6 @@ export function LocateMap({
   onHover,
 }: Props) {
   const map = useLoadedMap();
-  useControl(() => new NavigationControl({ showCompass: false }), "top-right");
-  useControl(() => new ScaleControl());
   useEffect(() => {
     map.getCanvas().style.cursor = "crosshair";
   }, [map]);
@@ -262,7 +264,8 @@ export function LocateMap({
           >
             <div className="label px-3 pt-2 pr-8">Location {editing + 1}</div>
             <OptionFields
-              locations={[edited]}
+              options={LOCATION_OPTIONS}
+              valueOf={(option) => optionState([edited], option.path)}
               onChange={(option, raw) => onLocationOption(editing, option, raw)}
             />
           </div>

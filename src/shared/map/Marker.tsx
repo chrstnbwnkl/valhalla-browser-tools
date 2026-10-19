@@ -1,4 +1,8 @@
-import { Marker as MapLibreMarker, type LngLat } from "maplibre-gl";
+import {
+  Marker as MapLibreMarker,
+  type LngLat,
+  type MarkerOptions,
+} from "maplibre-gl";
 import {
   useEffect,
   useEffectEvent,
@@ -14,6 +18,11 @@ export const LONG_PRESS_MS = 500;
 type Props = {
   lngLat: [lon: number, lat: number];
   draggable?: boolean;
+  /** Only read when the marker is created. */
+  anchor?: MarkerOptions["anchor"];
+  offset?: [number, number];
+  /** Classes of the marker element itself, e.g. for its z-index. */
+  className?: string;
   onDragEnd?: (lngLat: LngLat) => void;
   /** A native listener, so stopping the event keeps it from the map. */
   onContextMenu?: (e: MouseEvent) => void;
@@ -25,6 +34,9 @@ type Props = {
 export function Marker({
   lngLat,
   draggable = false,
+  anchor,
+  offset,
+  className,
   onDragEnd,
   onContextMenu,
   onLongPress,
@@ -36,9 +48,14 @@ export function Marker({
   const [lon, lat] = lngLat;
 
   const position = useEffectEvent(() => lngLat);
+  const placement = useEffectEvent(() => ({ anchor, offset }));
   const dragEnd = useEffectEvent((at: LngLat) => onDragEnd?.(at));
   useEffect(() => {
-    const instance = new MapLibreMarker({ element, draggable })
+    const instance = new MapLibreMarker({
+      element,
+      draggable,
+      ...placement(),
+    })
       .setLngLat(position())
       .addTo(map);
     instance.on("dragend", () => dragEnd(instance.getLngLat()));
@@ -52,6 +69,12 @@ export function Marker({
   useEffect(() => {
     marker.current?.setLngLat([lon, lat]);
   }, [lon, lat]);
+
+  useEffect(() => {
+    const classes = className?.split(/\s+/).filter(Boolean) ?? [];
+    element.classList.add(...classes);
+    return () => element.classList.remove(...classes);
+  }, [element, className]);
 
   const contextMenu = useEffectEvent((e: MouseEvent) => onContextMenu?.(e));
   useEffect(() => {

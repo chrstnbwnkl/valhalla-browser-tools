@@ -83,3 +83,38 @@ export function decodePolyline(str: string, precision = 6): Position[] {
   }
   return coords;
 }
+
+export function encodePolyline(coords: Position[], precision = 6) {
+  const factor = 10 ** precision;
+  let str = "";
+  let previous = [0, 0];
+  for (const [lon = 0, lat = 0] of coords) {
+    const current = [Math.round(lat * factor), Math.round(lon * factor)];
+    current.forEach((value, i) => {
+      const delta = value - previous[i]!;
+      let rest = delta < 0 ? ~(delta << 1) : delta << 1;
+      for (; rest >= 0x20; rest >>= 5)
+        str += String.fromCharCode((0x20 | (rest & 0x1f)) + 63);
+      str += String.fromCharCode(rest + 63);
+    });
+    previous = current;
+  }
+  return str;
+}
+
+/** The point halfway along a line. */
+export function midpoint(coords: Position[]): Position {
+  const lengths = coords
+    .slice(1)
+    .map((c, i) => Math.hypot(c[0]! - coords[i]![0]!, c[1]! - coords[i]![1]!));
+  let rest = lengths.reduce((sum, length) => sum + length, 0) / 2;
+  for (const [i, length] of lengths.entries()) {
+    if (rest <= length) {
+      const [a, b] = [coords[i]!, coords[i + 1]!];
+      const t = length ? rest / length : 0;
+      return [a[0]! + (b[0]! - a[0]!) * t, a[1]! + (b[1]! - a[1]!) * t];
+    }
+    rest -= length;
+  }
+  return coords[0]!;
+}

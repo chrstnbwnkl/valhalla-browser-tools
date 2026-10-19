@@ -14,7 +14,7 @@ import { SERVERS_KEY } from "../../shared/valhalla/servers";
 import { VIEWS_KEY } from "../../shared/valhalla/views";
 import { Map as FakeMap, LngLat } from "../../test/maplibre";
 import { App, URL_PARAM } from "./App";
-import { INVALID_REQUEST } from "./request";
+import { INVALID_REQUEST } from "../../shared/valhalla/request";
 
 const RESPONSE = [
   {

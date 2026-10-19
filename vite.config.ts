@@ -1,45 +1,21 @@
 /// <reference types="vitest/config" />
-import { cpSync } from "node:fs";
 import { resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig } from "vite";
 
 const PAGES = [
   "index.html",
   "attributes-controller-builder/index.html",
   "locate-playground/index.html",
+  "route-playground/index.html",
 ];
-
-// not ported yet: served and copied as they are
-const LEGACY = ["assets", "route-playground"];
-
-function legacy(): Plugin {
-  return {
-    name: "legacy-pages",
-    apply: "build",
-    closeBundle() {
-      for (const dir of LEGACY) {
-        cpSync(
-          resolve(import.meta.dirname, dir),
-          resolve(import.meta.dirname, "dist", dir),
-          {
-            recursive: true,
-            filter: (path) => !path.endsWith(".py"),
-          },
-        );
-      }
-    },
-  };
-}
 
 export default defineConfig({
   // works under any path, e.g. /valhalla-browser-tools/
   base: "./",
-  plugins: [react(), tailwindcss(), legacy()],
+  plugins: [react(), tailwindcss()],
   build: {
-    // apart from the legacy assets/
-    assetsDir: "static",
     rolldownOptions: {
       input: PAGES.map((page) => resolve(import.meta.dirname, page)),
       output: {

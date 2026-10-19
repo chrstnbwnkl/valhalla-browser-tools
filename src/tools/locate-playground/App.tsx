@@ -1,11 +1,9 @@
-import {
-  LngLatBounds,
-  type LngLat,
-  type Map as MapLibreMap,
-} from "maplibre-gl";
+import type { LngLat, Map as MapLibreMap } from "maplibre-gl";
 import { useMemo, useRef, useState } from "react";
 import { readUrlParam, useUrlParam } from "../../shared/hooks/urlParam";
 import { useMap } from "../../shared/map/context";
+import { Controls } from "../../shared/map/Controls";
+import { fitTo } from "../../shared/map/fit";
 import { MapView } from "../../shared/map/MapView";
 import { useThemeColors } from "../../shared/theme/colors";
 import { Button } from "../../shared/ui/Button";
@@ -16,12 +14,14 @@ import { SavedViews } from "../../shared/valhalla/SavedViews";
 import { ServerPicker } from "../../shared/valhalla/ServerPicker";
 import { useServers } from "../../shared/valhalla/servers";
 import { LocateMap } from "./LocateMap";
-import { OptionFields } from "./OptionFields";
+import { OptionFields } from "../../shared/valhalla/OptionFields";
 import {
   INVALID_REQUEST,
+  LOCATION_OPTIONS,
   isObject,
   locationsOf,
   newLocation,
+  optionState,
   optionValue,
   parseRequest,
   positionOf,
@@ -30,7 +30,7 @@ import {
   type LocateRequest,
   type Location,
   type Option,
-} from "./request";
+} from "../../shared/valhalla/request";
 import { ResultList } from "./ResultList";
 import { buildResults, counts, type LocateResult } from "./results";
 
@@ -109,8 +109,7 @@ export function App() {
     if (!on || !coords.length) return;
     const bounds = on.getBounds();
     if (!always && coords.every((at) => bounds.contains(at))) return;
-    const all = coords.reduce((b, at) => b.extend(at), new LngLatBounds());
-    on.fitBounds(all, { padding: 80, maxZoom: 16, duration: 0 });
+    fitTo(on, coords, { padding: 80, maxZoom: 16, duration: 0 });
   }
 
   function send(
@@ -325,7 +324,13 @@ export function App() {
               </small>
             </summary>
             <OptionFields
-              locations={locations.length ? locations : [template]}
+              options={LOCATION_OPTIONS}
+              valueOf={(option) =>
+                optionState(
+                  locations.length ? locations : [template],
+                  option.path,
+                )
+              }
               onChange={setOption}
             />
           </details>
@@ -366,6 +371,7 @@ export function App() {
           if (locations.length) send(request, servers.selected, loaded);
         }}
       >
+        <Controls />
         <LocateMap
           locations={locations}
           results={results}

@@ -8,6 +8,9 @@ export class LngLat {
     public lng: number,
     public lat: number,
   ) {}
+  wrap() {
+    return new LngLat(((((this.lng + 180) % 360) + 360) % 360) - 180, this.lat);
+  }
   static convert(input: LngLatLike) {
     return Array.isArray(input)
       ? new LngLat(input[0], input[1])
@@ -158,6 +161,13 @@ export class Map {
   removeLayer(id: string) {
     this.layers = this.layers.filter((layer) => layer.id !== id);
   }
+  /** Nothing is rendered unless a test says what is, by stubbing this. */
+  queryRenderedFeatures(
+    _point: unknown,
+    _options?: { layers?: string[] },
+  ): unknown[] {
+    return [];
+  }
   getStyle() {
     return { layers: this.layers };
   }
@@ -282,6 +292,7 @@ export class Marker {
   }) {
     this.element = element;
     this.draggable = draggable;
+    element.classList.add("maplibregl-marker");
   }
   setLngLat(input: LngLatLike) {
     this.lngLat = LngLat.convert(input);

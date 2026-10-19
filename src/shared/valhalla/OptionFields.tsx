@@ -1,26 +1,34 @@
 import { Fragment } from "react";
-import { CommitInput, Select } from "../../shared/ui/Input";
-import { OPTIONS, optionState, type Location, type Option } from "./request";
+import { CommitInput, Select } from "../ui/Input";
+import type { Option } from "./request";
 
 type Props = {
-  locations: Location[];
+  options: Option[];
+  /** What an option's input shows; mixed when the values it stands for differ. */
+  valueOf: (option: Option) => { value: string; mixed: boolean };
   onChange: (option: Option, raw: string) => void;
 };
 
-export function OptionFields({ locations, onChange }: Props) {
+const groupOf = (option?: Option) =>
+  option &&
+  (option.group ??
+    (option.path.includes(".") ? option.path.split(".")[0] : undefined));
+
+export function OptionFields({ options, valueOf, onChange }: Props) {
   return (
     <div className="grid grid-cols-2 gap-x-3 gap-y-2 px-3 pt-2 pb-3">
-      {OPTIONS.map((option, i) => {
-        const [key = "", sub] = option.path.split(".");
-        const group = sub && OPTIONS[i - 1]?.path.split(".")[0] !== key;
-        const { value, mixed } = optionState(locations, option.path);
+      {options.map((option, i) => {
+        const group = groupOf(option);
+        const { value, mixed } = valueOf(option);
         return (
-          <Fragment key={option.path}>
-            {group && (
-              <div className="code col-span-full text-ink-muted">{key}</div>
+          <Fragment key={`${group}:${option.path}`}>
+            {group && group !== groupOf(options[i - 1]) && (
+              <div className="code col-span-full text-ink-muted">{group}</div>
             )}
-            <label className="grid min-w-0 gap-1">
-              <span className="code">{sub ?? key}</span>
+            <label className="grid min-w-0 gap-1" title={option.title}>
+              <span className="code truncate">
+                {option.path.split(".").at(-1)}
+              </span>
               {option.values ? (
                 <Select
                   aria-label={option.path}

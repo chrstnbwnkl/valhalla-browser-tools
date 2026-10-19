@@ -1,6 +1,14 @@
 import type { Geometry } from "geojson";
 import { describe, expect, it } from "vitest";
-import { circle, decodePolyline, fc, line, point } from "./geo";
+import {
+  circle,
+  decodePolyline,
+  encodePolyline,
+  fc,
+  line,
+  midpoint,
+  point,
+} from "./geo";
 
 describe("decodePolyline", () => {
   it("decodes the reference example at precision 5", () => {
@@ -67,5 +75,30 @@ describe("features", () => {
         },
       ],
     });
+  });
+});
+
+describe("encodePolyline", () => {
+  it("is the inverse of decoding", () => {
+    const coords = [
+      [-120.2, 38.5],
+      [-120.95, 40.7],
+      [-126.453, 43.252],
+    ];
+    expect(encodePolyline(coords, 5)).toBe("_p~iF~ps|U_ulLnnqC_mqNvxq`@");
+    expect(decodePolyline(encodePolyline(coords))).toEqual(coords);
+  });
+});
+
+describe("midpoint", () => {
+  it("is halfway along the line, not between its vertices", () => {
+    expect(
+      midpoint([
+        [0, 0],
+        [1, 0],
+        [1, 3],
+      ]),
+    ).toEqual([1, 1]);
+    expect(midpoint([[5, 5]])).toEqual([5, 5]);
   });
 });

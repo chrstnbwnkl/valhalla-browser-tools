@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  OPTIONS,
+  CORRELATION_OPTIONS,
+  SEARCH_FILTER_OPTIONS,
   getOption,
   locationsOf,
   newLocation,
@@ -11,7 +12,10 @@ import {
   withOption,
 } from "./request";
 
-const option = (path: string) => OPTIONS.find((o) => o.path === path)!;
+const option = (path: string) =>
+  [...CORRELATION_OPTIONS, ...SEARCH_FILTER_OPTIONS].find(
+    (o) => o.path === path,
+  )!;
 
 describe("parseRequest", () => {
   it("accepts a JSON object", () => {
