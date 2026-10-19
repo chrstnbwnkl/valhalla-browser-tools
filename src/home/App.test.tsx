@@ -26,6 +26,7 @@ describe("landing page", () => {
     ).toEqual([
       "route-playground/",
       "locate-playground/",
+      "route-comparison/",
       "attributes-controller-builder/",
     ]);
   });

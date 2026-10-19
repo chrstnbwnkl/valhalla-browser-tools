@@ -1,4 +1,7 @@
 import type { MapOptions } from "maplibre-gl";
+import { useStoredState } from "../hooks/useStoredState";
+import { cn } from "../cn";
+import { Toggle } from "../ui/Toggle";
 
 export const BASEMAP_KEY = "valhalla-browser-tools:color-basemap";
 export const BASEMAP_LAYER = "osm";
@@ -44,3 +47,32 @@ export const basemapStyle = (
     },
   ],
 });
+
+const isTrue = (raw: unknown) => raw === true;
+
+/** Whether the basemap shows the tiles' own colours, for every tool. */
+export const useColourBasemap = () => useStoredState(BASEMAP_KEY, isTrue);
+
+export function BasemapToggle({
+  colour,
+  onChange,
+  className,
+}: {
+  colour: boolean;
+  onChange: (colour: boolean) => void;
+  /** Where it goes, in place of top centre. */
+  className?: string;
+}) {
+  return (
+    <Toggle
+      className={cn(
+        "absolute top-4 left-1/2 z-[2] -translate-x-1/2 rounded-lg bg-surface-raised px-3 py-2 shadow-float",
+        className,
+      )}
+      checked={colour}
+      onChange={(e) => onChange(e.target.checked)}
+    >
+      Color map
+    </Toggle>
+  );
+}

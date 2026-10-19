@@ -12,6 +12,7 @@ import { readUrlParam, useUrlParam } from "../../shared/hooks/urlParam";
 import { useMap } from "../../shared/map/context";
 import { Controls } from "../../shared/map/Controls";
 import { fitTo } from "../../shared/map/fit";
+import { InspectPopup } from "../../shared/map/InspectPopup";
 import { MapEvents } from "../../shared/map/MapEvents";
 import { MapView } from "../../shared/map/MapView";
 import { useThemeColors } from "../../shared/theme/colors";
@@ -37,13 +38,20 @@ import {
 import { SavedViews } from "../../shared/valhalla/SavedViews";
 import { ServerPicker } from "../../shared/valhalla/ServerPicker";
 import { useServers } from "../../shared/valhalla/servers";
-import { FORMAT, fetchRoute, mapMatch, toFilters, traceRequest } from "./api";
+import {
+  FORMAT,
+  fetchRoute,
+  mapMatch,
+  toFilters,
+  traceRequest,
+  type RouteResult,
+} from "./api";
 import { COSTINGS, costingOptions } from "./costing";
 import { DrawTools, type DrawMode } from "./DrawTools";
 import { routeEdges } from "./edges";
 import { EdgesLayers } from "./EdgesLayers";
 import { InputLayers } from "./InputLayers";
-import { FactorPopup, InspectPopup, WaypointPopup } from "./Popups";
+import { FactorPopup, WaypointPopup } from "./Popups";
 import { FilterDialog } from "./FilterDialog";
 import {
   ROUTE_OPTIONS,
@@ -64,8 +72,7 @@ import {
   flattenSteps,
   legShapes,
   routeCoords,
-  type RouteResult,
-} from "./routes";
+} from "../../shared/valhalla/osrm";
 import { StepsLayers } from "./StepsLayers";
 import { DEFAULT_THEMES, themeEdges } from "./themes";
 import { useHoverCursor } from "./useHoverCursor";

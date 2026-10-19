@@ -8,6 +8,12 @@ const PLAYGROUNDS = [
 
 const TOOLS = [
   {
+    href: "route-comparison/",
+    title: "Route comparison",
+    description:
+      "Paste /route responses and compare them side by side, on maps that move together.",
+  },
+  {
     href: "attributes-controller-builder/",
     title: "Attributes controller builder",
     description:

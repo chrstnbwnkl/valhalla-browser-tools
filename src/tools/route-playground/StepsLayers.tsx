@@ -10,9 +10,13 @@ import {
 } from "../../shared/map/hooks";
 import { Marker } from "../../shared/map/Marker";
 import type { ThemeColors } from "../../shared/theme/colors";
-import { fmt } from "./format";
-import { TAG } from "./labels";
-import type { FlatStep, Intersection, RouteResponse } from "./routes";
+import { fmt } from "../../shared/format";
+import { TAG } from "../../shared/map/labels";
+import type {
+  FlatStep,
+  Intersection,
+  RouteResponse,
+} from "../../shared/valhalla/osrm";
 
 const ROUND = { "line-cap": "round", "line-join": "round" } as const;
 

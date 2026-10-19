@@ -9,6 +9,7 @@ const PAGES = [
   "attributes-controller-builder/index.html",
   "locate-playground/index.html",
   "route-playground/index.html",
+  "route-comparison/index.html",
 ];
 
 export default defineConfig({

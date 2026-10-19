@@ -9,7 +9,7 @@ import {
 } from "../../shared/map/hooks";
 import { Marker } from "../../shared/map/Marker";
 import type { ThemeColors } from "../../shared/theme/colors";
-import { TAG } from "./labels";
+import { TAG } from "../../shared/map/labels";
 import type { ThemeSettings, ThemedEdge } from "./themes";
 
 const ROUND = { "line-cap": "round", "line-join": "round" } as const;

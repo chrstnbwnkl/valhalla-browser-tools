@@ -1,6 +1,6 @@
 import type { Position } from "geojson";
-import { decodePolyline } from "../../shared/map/geo";
-import type { Json } from "../../shared/valhalla/request";
+import { decodePolyline } from "../map/geo";
+import type { Json } from "./request";
 
 // what is used of an OSRM-format /route response
 type Geometry = string | { coordinates?: Position[] };

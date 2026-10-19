@@ -220,9 +220,22 @@ export class Map {
   getBounds() {
     return this.bounds;
   }
+  getBearing() {
+    return 0;
+  }
+  getPitch() {
+    return 0;
+  }
   jumpTo({ center, zoom }: { center?: LngLatLike; zoom?: number }) {
     if (center) this.center = LngLat.convert(center);
     if (zoom !== undefined) this.zoom = zoom;
+    this.fire("move", {});
+  }
+  zoomIn() {
+    this.jumpTo({ zoom: this.zoom + 1 });
+  }
+  zoomOut() {
+    this.jumpTo({ zoom: this.zoom - 1 });
   }
   fitBounds(bounds: LngLatBounds) {
     this.fitted = bounds;

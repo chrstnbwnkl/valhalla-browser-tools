@@ -1,6 +1,6 @@
 import type { ThemeColors } from "../../shared/theme/colors";
 import type { RouteEdge } from "./edges";
-import { fmtValue } from "./format";
+import { fmtValue } from "../../shared/format";
 
 // Categorical values get the data series in order of frequency, the rest is
 // "other". Numbers get a ramp, one hue for edges and another for nodes.

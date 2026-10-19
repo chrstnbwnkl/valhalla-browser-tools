@@ -2,7 +2,7 @@ import type { Position } from "geojson";
 import { encodePolyline } from "../../shared/map/geo";
 import { isObject, type Json } from "../../shared/valhalla/request";
 import type { TracedLeg, TracePath } from "./edges";
-import type { RouteResponse } from "./routes";
+import type { RouteResponse } from "../../shared/valhalla/osrm";
 
 // weights and turn weights only come in this format
 export const FORMAT = "osrm";
@@ -158,3 +158,6 @@ export async function mapMatch(
     `Could not map match the line: ${valhallaError(data) ?? (isObject(data) && typeof data.error === "string" ? data.error : "no shape in the response")}`,
   );
 }
+
+/** A response on show, with the request it answers. */
+export type RouteResult = { data: RouteResponse; sent: Json; status: string };

@@ -1,7 +1,7 @@
 import { Select } from "../../shared/ui/Input";
 import { Toggle } from "../../shared/ui/Toggle";
 import { WayLink } from "../../shared/valhalla/WayLinks";
-import { fmt } from "./format";
+import { fmt } from "../../shared/format";
 import type { LegendRow, Scale, ThemeSettings } from "./themes";
 
 type Props = {

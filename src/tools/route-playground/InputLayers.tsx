@@ -7,7 +7,7 @@ import { useGeoJSONSource, useLayer } from "../../shared/map/hooks";
 import { Marker } from "../../shared/map/Marker";
 import type { ThemeColors } from "../../shared/theme/colors";
 import { positionOf, type Location } from "../../shared/valhalla/request";
-import { TAG } from "./labels";
+import { TAG } from "../../shared/map/labels";
 import { costLines, exclusionRings, factorEffect } from "./request";
 
 const EFFECT_COLOR = {

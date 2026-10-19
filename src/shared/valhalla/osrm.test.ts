@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { encodePolyline } from "../../shared/map/geo";
-import route from "./fixtures/route.json";
+import { encodePolyline } from "../map/geo";
+import route from "../../tools/route-playground/fixtures/route.json";
 import {
   flattenSteps,
   legShapes,
   routeCoords,
   toCoords,
   type RouteResponse,
-} from "./routes";
+} from "./osrm";
 
 const { routes, waypoints } = route as RouteResponse;
 const selected = routes[0]!;

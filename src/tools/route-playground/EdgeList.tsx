@@ -4,7 +4,7 @@ import { useScrollToRow } from "../../shared/hooks/useScrollToRow";
 import { Badge } from "../../shared/ui/Badge";
 import { WayLink } from "../../shared/valhalla/WayLinks";
 import type { TracedLeg } from "./edges";
-import { fmt, fmtValue } from "./format";
+import { fmt, fmtValue } from "../../shared/format";
 import { ACTIVE_ROW, LEG, METRICS, ROW, SWATCH } from "./lists";
 import type { ThemedEdge } from "./themes";
 

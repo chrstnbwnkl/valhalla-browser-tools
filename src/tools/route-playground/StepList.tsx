@@ -2,9 +2,9 @@ import type { Position } from "geojson";
 import { cn } from "../../shared/cn";
 import { useScrollToRow } from "../../shared/hooks/useScrollToRow";
 import { Badge } from "../../shared/ui/Badge";
-import { fmt } from "./format";
+import { fmt } from "../../shared/format";
 import { ACTIVE_ROW, LEG, METRICS, ROW, SWATCH } from "./lists";
-import type { FlatStep, Route } from "./routes";
+import type { FlatStep, Route } from "../../shared/valhalla/osrm";
 
 type Props = {
   route: Route;
