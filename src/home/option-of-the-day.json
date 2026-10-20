@@ -1,10 +1,10 @@
 {
-  "id": "Location.rank_candidates",
-  "name": "rank_candidates",
-  "scope": "location option",
-  "type": "boolean",
-  "default": true,
-  "description": "Rank snap candidates by distance to input.",
+  "id": "Pedestrian.max_distance",
+  "name": "max_distance",
+  "scope": "costing option · pedestrian, bikeshare",
+  "type": "integer",
+  "minimum": 0,
+  "description": "Sets the maximum total walking distance of a route in meters. Default 100000 (foot), 10000 (wheelchair).",
   "badge": null,
   "notes": []
 }
