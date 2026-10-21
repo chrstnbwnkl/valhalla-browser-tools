@@ -1,10 +1,12 @@
 {
-  "id": "Pedestrian.max_distance",
-  "name": "max_distance",
+  "id": "Pedestrian.use_hills",
+  "name": "use_hills",
   "scope": "costing option · pedestrian, bikeshare",
-  "type": "integer",
+  "type": "number",
+  "default": 0.5,
   "minimum": 0,
-  "description": "Sets the maximum total walking distance of a route in meters. Default 100000 (foot), 10000 (wheelchair).",
+  "maximum": 1,
+  "description": "This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it means a longer (time and distance) path, while 1 indicates the pedestrian does not fear hills and steeper grades. Based on the `use_hills` factor, penalties are applied to roads based on elevation change and grade. These penalties help the path avoid hilly roads in favor of flatter roads or less steep grades where available. Note that it is not always possible to find alternate paths to avoid hills (for example when route locations are in mountainous areas).",
   "badge": null,
   "notes": []
 }
