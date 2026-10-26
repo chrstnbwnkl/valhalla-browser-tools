@@ -1,10 +1,9 @@
 {
-  "id": "Location.street_side_max_distance",
-  "name": "street_side_max_distance",
-  "scope": "location option",
-  "type": "integer",
-  "minimum": 0,
-  "description": "The max distance in meters that the input coordinates or display ll can be from the edge centerline for them to be used for determining the side of street. Beyond this distance the side of street is set to none. The default value is service configuration dependent (1000 by default).",
+  "id": "Request.durations",
+  "name": "durations",
+  "scope": "request option · /trace_route",
+  "type": "array of number",
+  "description": "Elapsed seconds between each successive pair of trace points. Used with begin_time to derive per-point timestamps from an encoded_polyline input.",
   "badge": null,
   "notes": []
 }
