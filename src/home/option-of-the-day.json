@@ -1,12 +1,10 @@
 {
-  "id": "Auto.use_tolls",
-  "name": "use_tolls",
-  "scope": "costing option · auto, bus, taxi",
-  "type": "number",
-  "default": 0.5,
-  "minimum": 0,
-  "maximum": 1,
-  "description": "This value indicates the willingness to take roads with tolls. This is a range of values between 0 and 1. Values smaller than 0.5 attempt to avoid tolls and values greater than 0.5 will slightly favor them. A value of 0.5 indicates no preference. Note that sometimes roads with tolls are required to complete a route so values of 0 are not guaranteed to avoid them entirely.",
+  "id": "Location.search_filter.exclude_ferry",
+  "name": "search_filter.exclude_ferry",
+  "scope": "location option",
+  "type": "boolean",
+  "default": false,
+  "description": "Whether to exclude ferry routes.",
   "badge": null,
   "notes": []
 }
