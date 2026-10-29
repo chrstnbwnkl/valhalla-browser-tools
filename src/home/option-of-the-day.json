@@ -1,10 +1,12 @@
 {
-  "id": "Location.search_filter.exclude_ferry",
-  "name": "search_filter.exclude_ferry",
-  "scope": "location option",
-  "type": "boolean",
-  "default": false,
-  "description": "Whether to exclude ferry routes.",
+  "id": "Base.closure_factor",
+  "name": "closure_factor",
+  "scope": "costing option · all costings",
+  "type": "number",
+  "default": 9.0,
+  "minimum": 1,
+  "maximum": 10,
+  "description": "A factor that penalizes the cost when traversing a closed edge (eg: if `search_filter.exclude_closures` is `false` for origin and/or destination location and the route starts/ends on closed edges). Its value can range from `1.0` - don't penalize closed edges, to `10.0` - apply high cost penalty to closed edges. Default value is `9.0`. **Note:** This factor is applicable only for motorized modes of transport, i.e auto, motorcycle, motor_scooter, bus, truck & taxi.",
   "badge": null,
   "notes": []
 }
