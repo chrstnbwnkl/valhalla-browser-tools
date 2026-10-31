@@ -1,10 +1,20 @@
 {
-  "id": "Bicycle.cycling_speed",
-  "name": "cycling_speed",
-  "scope": "costing option · bicycle",
-  "type": "number",
-  "minimum": 5,
-  "description": "Cycling speed in km/h. Defaults depend on transport_type.",
+  "id": "Location.street_side_cutoff",
+  "name": "street_side_cutoff",
+  "scope": "location option",
+  "type": "string",
+  "default": "service_other",
+  "enum": [
+    "motorway",
+    "trunk",
+    "primary",
+    "secondary",
+    "tertiary",
+    "unclassified",
+    "residential",
+    "service_other"
+  ],
+  "description": "Ignore side preference for roads above this class.",
   "badge": null,
   "notes": []
 }
