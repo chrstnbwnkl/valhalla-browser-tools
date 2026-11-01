@@ -1,20 +1,11 @@
 {
-  "id": "Location.street_side_cutoff",
-  "name": "street_side_cutoff",
+  "id": "Location.minimum_reachability",
+  "name": "minimum_reachability",
   "scope": "location option",
-  "type": "string",
-  "default": "service_other",
-  "enum": [
-    "motorway",
-    "trunk",
-    "primary",
-    "secondary",
-    "tertiary",
-    "unclassified",
-    "residential",
-    "service_other"
-  ],
-  "description": "Ignore side preference for roads above this class.",
+  "type": "integer",
+  "default": 50,
+  "minimum": 0,
+  "description": "Minimum number of reachable edges for a snap candidate. The default and max values are service configuration dependent (50 and 100 by default, respectively).",
   "badge": null,
   "notes": []
 }
