@@ -1,11 +1,9 @@
 {
-  "id": "Location.minimum_reachability",
-  "name": "minimum_reachability",
+  "id": "Location.preferred_layer",
+  "name": "preferred_layer",
   "scope": "location option",
   "type": "integer",
-  "default": 50,
-  "minimum": 0,
-  "description": "Minimum number of reachable edges for a snap candidate. The default and max values are service configuration dependent (50 and 100 by default, respectively).",
+  "description": "If set, edges whose layer does not match this value are discarded from candidate search. Note that this is a \"soft\" filter, meaning if no other candidates are found, Valhalla will fall back to including edges that did not match this filter.",
   "badge": null,
   "notes": []
 }
