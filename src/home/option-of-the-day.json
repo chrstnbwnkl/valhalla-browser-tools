@@ -1,9 +1,12 @@
 {
-  "id": "Location.preferred_layer",
-  "name": "preferred_layer",
-  "scope": "location option",
-  "type": "integer",
-  "description": "If set, edges whose layer does not match this value are discarded from candidate search. Note that this is a \"soft\" filter, meaning if no other candidates are found, Valhalla will fall back to including edges that did not match this filter.",
+  "id": "Motorcycle.use_tolls",
+  "name": "use_tolls",
+  "scope": "costing option · motorcycle",
+  "type": "number",
+  "default": 0.5,
+  "minimum": 0,
+  "maximum": 1,
+  "description": "This value indicates the willingness to take roads with tolls. This is a range of values between 0 and 1. Values smaller than 0.5 attempt to avoid tolls and values greater than 0.5 will slightly favor them. The default value is 0.5, indicating no preference. Note that sometimes roads with tolls are required to complete a route so values of 0 are not guaranteed to avoid them entirely.",
   "badge": null,
   "notes": []
 }
