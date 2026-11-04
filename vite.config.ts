@@ -10,6 +10,7 @@ const PAGES = [
   "locate-playground/index.html",
   "route-playground/index.html",
   "route-comparison/index.html",
+  "route-attributes/index.html",
 ];
 
 export default defineConfig({

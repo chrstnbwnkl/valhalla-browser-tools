@@ -8,6 +8,8 @@ import type { RouteResponse } from "../../shared/valhalla/osrm";
 export const FORMAT = "osrm";
 
 export type Filters = { attributes: string[]; action: "include" | "exclude" };
+// shared by every tool that traces, like the server list
+export const FILTERS_KEY = "valhalla-browser-tools:attribute-filter";
 
 // the edges view can't draw an edge without these, so no filter drops them
 const DRAWN_ATTRIBUTES = [
@@ -29,6 +31,15 @@ export function toFilters(value: unknown): Filters {
   if (action !== "include" && action !== "exclude")
     throw new Error('"action" must be "include" or "exclude".');
   return { attributes, action };
+}
+
+/** The stored filter, or null for none or one that doesn't parse. */
+export function parseFilters(raw: unknown) {
+  try {
+    return raw === null ? null : toFilters(raw);
+  } catch {
+    return null;
+  }
 }
 
 async function post(

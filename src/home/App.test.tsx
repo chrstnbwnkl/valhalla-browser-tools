@@ -27,6 +27,7 @@ describe("landing page", () => {
       "route-playground/",
       "locate-playground/",
       "route-comparison/",
+      "route-attributes/",
       "attributes-controller-builder/",
     ]);
   });

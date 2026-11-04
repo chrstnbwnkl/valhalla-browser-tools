@@ -2,6 +2,7 @@ import type { Position } from "geojson";
 import { decodePolyline } from "../../shared/map/geo";
 import {
   flattenSteps,
+  legShapes,
   routeCoords,
   type RouteResponse,
   type Step,
@@ -27,6 +28,8 @@ export type Segment = {
 
 export type Route = {
   coords: Position[];
+  /** The shape of every leg. */
+  legShapes: Position[][];
   segments: Segment[];
   legCosts: (number | undefined)[];
   cost?: number;
@@ -53,6 +56,7 @@ function fromOsrm(data: RouteResponse): Response {
     format: "osrm",
     routes: data.routes.map((route) => ({
       coords: routeCoords(route, start),
+      legShapes: legShapes(route, start),
       segments: flattenSteps(route).map(({ idx, legIdx, step, coords }) => {
         const { geometry: _, intersections = [], ...raw } = step as Step & Json;
         const maneuver = [step.maneuver?.type, step.maneuver?.modifier]
@@ -139,8 +143,10 @@ function fromTrip(trip: Trip): Route {
       raw: maneuver,
     }));
   });
+  const shapes = trip.legs.map((leg) => decodePolyline(leg.shape));
   return {
-    coords: trip.legs.flatMap((leg) => decodePolyline(leg.shape)),
+    coords: shapes.flat(),
+    legShapes: shapes,
     segments,
     legCosts: trip.legs.map((leg) => leg.summary?.cost),
     cost: trip.summary?.cost,

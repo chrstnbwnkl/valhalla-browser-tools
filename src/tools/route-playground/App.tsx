@@ -39,10 +39,11 @@ import { SavedViews } from "../../shared/valhalla/SavedViews";
 import { ServerPicker } from "../../shared/valhalla/ServerPicker";
 import { useServers } from "../../shared/valhalla/servers";
 import {
+  FILTERS_KEY,
   FORMAT,
   fetchRoute,
   mapMatch,
-  toFilters,
+  parseFilters,
   traceRequest,
   type RouteResult,
 } from "./api";
@@ -80,18 +81,9 @@ import { useTraces } from "./useTraces";
 
 // the parameter Valhalla itself accepts on GET requests
 export const URL_PARAM = "json";
-export const FILTERS_KEY = "valhalla-browser-tools:attribute-filter";
 const DEFAULT_REQUEST = { locations: [], costing: "auto", format: FORMAT };
 const INSPECTABLE = ["waypoints", "intersections", "nodes", "edges"];
 const HOVERABLE = [...INSPECTABLE, "cost-lines"];
-
-function parseFilters(raw: unknown) {
-  try {
-    return raw === null ? null : toFilters(raw);
-  } catch {
-    return null;
-  }
-}
 
 function initialText() {
   const shared = readUrlParam(URL_PARAM);

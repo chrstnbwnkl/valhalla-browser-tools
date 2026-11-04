@@ -14,6 +14,12 @@ const TOOLS = [
       "Paste /route responses and compare them side by side, on maps that move together.",
   },
   {
+    href: "route-attributes/",
+    title: "Route attributes",
+    description:
+      "Paste a /route response and see the attributes of its edges and nodes, from trace_attributes.",
+  },
+  {
     href: "attributes-controller-builder/",
     title: "Attributes controller builder",
     description:

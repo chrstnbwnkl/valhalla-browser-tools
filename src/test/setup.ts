@@ -36,6 +36,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   localStorage.clear();
+  sessionStorage.clear();
   history.replaceState(null, "", "/");
   expect(offline, "fetch without a stubbed response").not.toHaveBeenCalled();
 });

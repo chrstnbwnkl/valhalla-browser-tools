@@ -191,10 +191,10 @@ export function ResultPanel({
   );
 }
 
-const unitOf = (legs: TracedLeg[]) =>
+export const unitOf = (legs: TracedLeg[]) =>
   ({ kilometers: " km", miles: " mi" })[legs[0]?.path.units ?? ""] ?? "";
 
-function EdgeStats({ legs }: { legs: TracedLeg[] }) {
+export function EdgeStats({ legs }: { legs: TracedLeg[] }) {
   const edges = legs.flatMap((leg) => leg.path.edges);
   // elapsed_time starts over in every leg
   const elapsed = legs.map(
