@@ -1,12 +1,10 @@
 {
-  "id": "Motorcycle.use_tolls",
-  "name": "use_tolls",
-  "scope": "costing option · motorcycle",
+  "id": "Location.waiting",
+  "name": "waiting",
+  "scope": "location option",
   "type": "number",
-  "default": 0.5,
   "minimum": 0,
-  "maximum": 1,
-  "description": "This value indicates the willingness to take roads with tolls. This is a range of values between 0 and 1. Values smaller than 0.5 attempt to avoid tolls and values greater than 0.5 will slightly favor them. The default value is 0.5, indicating no preference. Note that sometimes roads with tolls are required to complete a route so values of 0 are not guaranteed to avoid them entirely.",
+  "description": "Waiting time in seconds at this stop (break/break_through only, not origin/destination).",
   "badge": null,
   "notes": []
 }
