@@ -1,10 +1,10 @@
 {
-  "id": "Location.rank_candidates",
-  "name": "rank_candidates",
+  "id": "Location.waiting",
+  "name": "waiting",
   "scope": "location option",
-  "type": "boolean",
-  "default": true,
-  "description": "Rank snap candidates by distance to input.",
+  "type": "number",
+  "minimum": 0,
+  "description": "Waiting time in seconds at this stop (break/break_through only, not origin/destination).",
   "badge": null,
   "notes": []
 }
