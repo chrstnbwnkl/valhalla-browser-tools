@@ -85,7 +85,7 @@ export function StepsLayers({
                     point(intersection.location, {
                       idx: s.idx,
                       i,
-                      turnWeight: intersection.turn_weight ?? 0,
+                      turnCost: intersection.turn_weight ?? 0,
                     }),
                   ]
                 : [],
@@ -153,7 +153,7 @@ export function StepsLayers({
       "circle-stroke-color": colors.green,
     },
   });
-  // amber where the intersection carries a turn weight
+  // amber where the intersection carries a turn cost
   useLayer({
     id: "intersections",
     type: "circle",
@@ -162,7 +162,7 @@ export function StepsLayers({
       "circle-radius": 3,
       "circle-color": [
         "case",
-        [">", ["get", "turnWeight"], 0],
+        [">", ["get", "turnCost"], 0],
         colors.amber,
         colors["ink-subtle"],
       ],
@@ -202,7 +202,7 @@ export function StepsLayers({
               "cursor-pointer border-2 border-green",
               s.idx === highlighted && "bg-magenta-soft",
             )}
-            title={`step ${s.idx} weight`}
+            title={`step ${s.idx} cost`}
             onMouseEnter={() => onHover(s.idx)}
             onMouseLeave={() => onHover(null)}
           >
@@ -210,7 +210,7 @@ export function StepsLayers({
           </div>
         </Marker>
       ))}
-      {/* turn weights, on the other side of the intersection from the step weights */}
+      {/* turn costs, on the other side of the intersection from the step costs */}
       {steps.flatMap((s) =>
         (s.step.intersections ?? []).map((intersection, i) =>
           intersection.turn_weight && intersection.location ? (
@@ -226,7 +226,7 @@ export function StepsLayers({
                   TAG,
                   "cursor-pointer border-amber bg-amber-soft text-amber-ink",
                 )}
-                title={`step ${s.idx} · intersection ${i} turn_weight`}
+                title={`step ${s.idx} · intersection ${i} turn cost`}
                 onClick={() =>
                   onInspect(
                     `step ${s.idx} · intersection ${i}`,

@@ -14,7 +14,7 @@ type Props = {
   onFocus: (coords: Position[]) => void;
 };
 
-/** The steps of each leg with their weights, checking they add up to the leg's. */
+/** The steps of each leg with their costs, checking they add up to the leg's. */
 export function StepList({
   route,
   steps,
@@ -23,7 +23,7 @@ export function StepList({
   onFocus,
 }: Props) {
   const rowRef = useScrollToRow(highlighted);
-  // the weight so far, after each step
+  // the cost so far, after each step
   const totals = steps.reduce<number[]>(
     (sums, s) => [...sums, (sums.at(-1) ?? 0) + (s.step.weight ?? 0)],
     [],
@@ -40,7 +40,7 @@ export function StepList({
         const matches = Math.abs(sum - (leg.weight ?? 0)) < 0.01;
         return [
           <li key={`leg:${legIdx}`} className={LEG}>
-            Leg {legIdx} · weight {fmt(leg.weight)}
+            Leg {legIdx} · cost {fmt(leg.weight)}
             <Badge tone={matches ? "green" : "danger"}>
               {matches ? "= Σ steps" : `≠ Σ steps ${fmt(sum)}`}
             </Badge>

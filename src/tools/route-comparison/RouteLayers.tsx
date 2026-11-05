@@ -135,7 +135,7 @@ export function RouteLayers({
       "circle-stroke-color": colors.green,
     },
   });
-  // amber where the intersection carries a turn weight
+  // amber where the intersection carries a turn cost
   useLayer({
     id: "intersections",
     type: "circle",
@@ -184,7 +184,7 @@ export function RouteLayers({
           </button>
         </Marker>
       ))}
-      {/* turn weights, on the other side of the intersection from the step weights */}
+      {/* turn costs, on the other side of the intersection from the step costs */}
       {segments.flatMap((s) =>
         s.intersections.map((intersection, i) =>
           intersection.turnCost ? (
@@ -200,7 +200,7 @@ export function RouteLayers({
                   TAG,
                   "cursor-pointer border-amber bg-amber-soft text-amber-ink",
                 )}
-                title={`step ${s.idx} · intersection ${i} turn_weight`}
+                title={`step ${s.idx} · intersection ${i} turn cost`}
                 onClick={() =>
                   onInspect(
                     `step ${s.idx} · intersection ${i}`,

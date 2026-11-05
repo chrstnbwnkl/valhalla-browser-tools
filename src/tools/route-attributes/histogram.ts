@@ -1,5 +1,6 @@
 import type { Position } from "geojson";
 import type { RouteEdge } from "../route-playground/edges";
+import { edgeAttributes } from "../route-playground/themes";
 
 // numeric, but identifiers or positions rather than quantities
 const SKIPPED = /(^|_)id$|_shape_index$|_heading$/;
@@ -13,7 +14,7 @@ const MI_PER_KM = 0.621371;
 export function numericKeys(edges: RouteEdge[]) {
   const keys = new Map<string, boolean>();
   for (const { edge } of edges)
-    for (const [key, value] of Object.entries(edge)) {
+    for (const [key, value] of Object.entries(edgeAttributes(edge))) {
       if (SKIPPED.test(key) || value === null || value === undefined) continue;
       keys.set(key, (keys.get(key) ?? true) && typeof value === "number");
     }
@@ -80,7 +81,7 @@ export function histogram(
   const valued: { idx: number; value: number; distance: number }[] = [];
   let missing = 0;
   for (const e of edges) {
-    const value = e.edge[key];
+    const value = edgeAttributes(e.edge)[key];
     const distance = edgeLength(e, units);
     if (typeof value === "number" && Number.isFinite(value))
       valued.push({ idx: e.idx, value, distance });

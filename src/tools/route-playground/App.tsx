@@ -560,8 +560,8 @@ export function App() {
         </div>
         <p className="mx-3 mt-2 mb-0 text-ink-muted">
           Click the map to append a waypoint, right-click to insert one
-          elsewhere. Drag a waypoint to move it, hold it to set its own options,
-          right-click it to delete or reorder it.
+          elsewhere. Drag a waypoint to move it, click it to set its own
+          options, right-click it to delete or reorder it.
         </p>
         {shownError && (
           <p role="alert" className="mx-3 mt-2 mb-0 text-danger">

@@ -298,7 +298,7 @@ export function App() {
         </div>
         <p className="mx-3 mt-2 mb-0 text-ink-muted">
           Click the map to locate that point, right-click to add one. Drag a
-          point to move it, hold it to set its own options, right-click it to
+          point to move it, click it to set its own options, right-click it to
           remove it.
         </p>
         {(error ?? parseError) && (

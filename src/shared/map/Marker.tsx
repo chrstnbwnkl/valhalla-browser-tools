@@ -13,8 +13,6 @@ import {
 import { createPortal } from "react-dom";
 import { useLoadedMap } from "./context";
 
-export const LONG_PRESS_MS = 500;
-
 type Props = {
   lngLat: [lon: number, lat: number];
   draggable?: boolean;
@@ -26,8 +24,8 @@ type Props = {
   onDragEnd?: (lngLat: LngLat) => void;
   /** A native listener, so stopping the event keeps it from the map. */
   onContextMenu?: (e: MouseEvent) => void;
-  /** Pressing and holding without moving. */
-  onLongPress?: () => void;
+  /** A click that wasn't the end of a drag. */
+  onClick?: () => void;
   children: ReactNode;
 };
 
@@ -39,7 +37,7 @@ export function Marker({
   className,
   onDragEnd,
   onContextMenu,
-  onLongPress,
+  onClick,
   children,
 }: Props) {
   const map = useLoadedMap();
@@ -90,36 +88,35 @@ export function Marker({
     };
   }, [element]);
 
-  const longPress = useEffectEvent(() => onLongPress?.());
+  const click = useEffectEvent(() => onClick?.());
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    // a drag ends in a click too; only count presses that barely moved
     let start: { x: number; y: number } | null = null;
-    const cancel = () => {
-      clearTimeout(timer);
-      start = null;
-    };
+    let moved = false;
     const onDown = (e: PointerEvent) => {
       if (e.button !== 0) return;
       start = { x: e.clientX, y: e.clientY };
-      timer = setTimeout(() => {
-        start = null;
-        longPress();
-      }, LONG_PRESS_MS);
+      moved = false;
     };
     const onMove = (e: PointerEvent) => {
       if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 4)
-        cancel();
+        moved = true;
     };
+    const onClickEvent = (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      const wasDrag = moved;
+      start = null;
+      moved = false;
+      if (!wasDrag) click();
+    };
+    // the pointer leaves the marker while dragging, so watch the document
+    document.addEventListener("pointermove", onMove);
     element.addEventListener("pointerdown", onDown);
-    element.addEventListener("pointermove", onMove);
-    element.addEventListener("pointerup", cancel);
-    element.addEventListener("pointercancel", cancel);
+    element.addEventListener("click", onClickEvent);
     return () => {
-      cancel();
+      document.removeEventListener("pointermove", onMove);
       element.removeEventListener("pointerdown", onDown);
-      element.removeEventListener("pointermove", onMove);
-      element.removeEventListener("pointerup", cancel);
-      element.removeEventListener("pointercancel", cancel);
+      element.removeEventListener("click", onClickEvent);
     };
   }, [element]);
 

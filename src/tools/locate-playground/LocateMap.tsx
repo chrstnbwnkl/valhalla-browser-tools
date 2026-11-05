@@ -239,12 +239,12 @@ export function LocateMap({
           e.stopPropagation(); // or the map adds a point here
           onRemoveLocation(i);
         }}
-        onLongPress={() => onEdit(i)}
+        onClick={() => onEdit(i)}
       >
         <div
           className={`${MARKER_CLASS} size-[22px] cursor-grab rounded-full border-3 bg-surface text-center font-mono text-[11px]/4 font-bold text-ink`}
           style={{ borderColor: seriesColor(colors, i) }}
-          title="Drag to move, hold for its options, right-click to remove"
+          title="Drag to move, click for its options, right-click to remove"
         >
           {i + 1}
         </div>

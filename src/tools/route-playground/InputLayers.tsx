@@ -137,7 +137,7 @@ export function InputLayers({
               e.stopPropagation(); // or the map opens its own menu
               onLocationMenu(i, e);
             }}
-            onLongPress={() => onEditLocation(i)}
+            onClick={() => onEditLocation(i)}
           >
             <div
               className={cn(
@@ -146,7 +146,7 @@ export function InputLayers({
                 role === "destination" &&
                   "rounded-sm border-magenta bg-magenta text-on-magenta",
               )}
-              title="Drag to move, hold for its options, right-click to delete or reorder"
+              title="Drag to move, click for its options, right-click to delete or reorder"
             >
               {i + 1}
             </div>

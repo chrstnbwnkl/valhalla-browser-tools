@@ -9,7 +9,6 @@ import {
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { MapProvider } from "../../shared/map/context";
-import { LONG_PRESS_MS } from "../../shared/map/Marker";
 import { Map as FakeMap, LngLat } from "../../test/maplibre";
 import { TerraDraw } from "../../test/terra-draw";
 import { FILTERS_KEY } from "./api";
@@ -98,7 +97,7 @@ async function routed() {
 }
 
 describe("route playground", () => {
-  it("starts with an empty request in the format that has weights", async () => {
+  it("starts with an empty request in the format that has step costs", async () => {
     await setup();
     expect(request()).toEqual({
       locations: [],
@@ -107,7 +106,7 @@ describe("route playground", () => {
     });
   });
 
-  it("routes once there are two waypoints, and shows the steps and their weights", async () => {
+  it("routes once there are two waypoints, and shows the steps and their costs", async () => {
     const { sent, map } = await routed();
     expect(sent("route")).toHaveLength(2);
     expect(sent("route").at(-1)).toMatchObject({
@@ -120,20 +119,20 @@ describe("route playground", () => {
     });
     expect(markers().map((m) => m.textContent)).toEqual(["1", "2", "3"]);
     expect(screen.getByRole("status")).toHaveTextContent(/^1 route · \d+ ms$/);
-    expect(screen.getByText("weight (auto)").nextSibling).toHaveTextContent(
+    expect(screen.getByText("cost (auto)").nextSibling).toHaveTextContent(
       "2319.162",
     );
 
     const steps = within(screen.getByRole("list", { name: "Steps" }));
-    expect(steps.getByText(/^Leg 0 · weight 1132.184/)).toBeInTheDocument();
+    expect(steps.getByText(/^Leg 0 · cost 1132.184/)).toBeInTheDocument();
     expect(steps.getAllByText("= Σ steps")).toHaveLength(2);
     expect(
       steps.getAllByText("Turn left onto Behrenstraße.")[0],
     ).toBeInTheDocument();
     expect(map.data("steps")!.features).toHaveLength(12);
-    // a weight label per step but the arrivals, a turn label per turn weight
-    expect(screen.getAllByTitle(/^step \d+ weight$/)).toHaveLength(10);
-    expect(screen.getAllByTitle(/turn_weight$/).length).toBeGreaterThan(10);
+    // a cost label per step but the arrivals, a turn label per turn cost
+    expect(screen.getAllByTitle(/^step \d+ cost$/)).toHaveLength(10);
+    expect(screen.getAllByTitle(/turn cost$/).length).toBeGreaterThan(10);
   });
 
   it("clears the route when fewer than two waypoints are left", async () => {
@@ -194,7 +193,7 @@ describe("route playground", () => {
 
   it("ignores clicks on its labels and waypoints", async () => {
     const { map, sent } = await routed();
-    click(map, A, screen.getByTitle("step 1 weight"));
+    click(map, A, screen.getByTitle("step 1 cost"));
     click(map, A, markers()[0]);
     expect(request().locations).toHaveLength(3);
     expect(sent("route")).toHaveLength(2);
@@ -261,6 +260,7 @@ describe("route playground", () => {
     ]);
 
     fireEvent.pointerDown(markers()[1]!, { button: 0, clientX: 0, clientY: 0 });
+    fireEvent.click(markers()[1]!, { button: 0 });
     const popup = within(
       await screen.findByRole("dialog", { name: "Waypoint 2 options" }),
     );
@@ -383,7 +383,7 @@ describe("route playground", () => {
     expect(screen.getByRole("status")).toHaveTextContent(/^2 routes/);
     expect(map.data("alternatives")!.features).toHaveLength(1);
     await user.selectOptions(routes, "1");
-    expect(screen.getByText("weight (auto)").nextSibling).toHaveTextContent(
+    expect(screen.getByText("cost (auto)").nextSibling).toHaveTextContent(
       "9999",
     );
   });
@@ -433,7 +433,7 @@ describe("route playground", () => {
       ["get", "idx"],
       3,
     ]);
-    expect(screen.getByTitle("step 3 weight")).toHaveClass("bg-magenta-soft");
+    expect(screen.getByTitle("step 3 cost")).toHaveClass("bg-magenta-soft");
   });
 
   it("draws exclude polygons into the request", async () => {
@@ -553,13 +553,15 @@ describe("route playground", () => {
     expect(map.fitted!.contains([13.5, 52.517])).toBe(false);
   });
 
-  it("only opens a held waypoint's options after holding", async () => {
+  it("opens a clicked waypoint's options, but not after dragging it", async () => {
     await routed();
     fireEvent.pointerDown(markers()[0]!, { button: 0, clientX: 0, clientY: 0 });
-    fireEvent.pointerUp(markers()[0]!);
-    await act(
-      () => new Promise((done) => setTimeout(done, LONG_PRESS_MS + 50)),
-    );
+    fireEvent.pointerMove(document, { clientX: 30, clientY: 0 });
+    fireEvent.click(markers()[0]!, { button: 0 });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    fireEvent.pointerDown(markers()[0]!, { button: 0, clientX: 0, clientY: 0 });
+    fireEvent.click(markers()[0]!, { button: 0 });
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
   });
 });

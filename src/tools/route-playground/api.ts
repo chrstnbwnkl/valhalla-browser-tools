@@ -4,7 +4,7 @@ import { isObject, type Json } from "../../shared/valhalla/request";
 import type { TracedLeg, TracePath } from "./edges";
 import type { RouteResponse } from "../../shared/valhalla/osrm";
 
-// weights and turn weights only come in this format
+// step costs and turn costs only come in this format
 export const FORMAT = "osrm";
 
 export type Filters = { attributes: string[]; action: "include" | "exclude" };

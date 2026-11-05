@@ -8,8 +8,36 @@ const CATEGORICAL = ["green", "magenta", "ink", "blue", "amber"] as const;
 const EDGE_RAMP = ["green-soft", "green", "green-ink"] as const;
 const NODE_RAMP = ["magenta-soft", "magenta", "magenta-ink"] as const;
 const HIDDEN_KEYS = new Set(["begin_shape_index", "end_shape_index"]);
-// numeric, but identifiers rather than quantities
-const ID_KEY = /(^|_)id$/;
+// numeric, but not quantities a ramp could order: identifiers, angles that
+// wrap around and bit masks
+const ID_KEY = /(^|_)id$|_heading$|(^|_)bicycle_network$/;
+
+/**
+ * An object's attributes with nested objects expanded into their own,
+ * `parent_child`, at any depth. Lists are left as they are.
+ */
+export function flatten(
+  object: object | undefined,
+  prefix = "",
+): Record<string, unknown> {
+  const flat: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(object ?? {}) as [
+    string,
+    unknown,
+  ][]) {
+    const name = prefix + key;
+    if (value && typeof value === "object" && !Array.isArray(value))
+      Object.assign(flat, flatten(value, `${name}_`));
+    else flat[name] = value;
+  }
+  return flat;
+}
+
+/** An edge's attributes, flattened, without its end node, themed apart. */
+export function edgeAttributes(edge: object) {
+  const { end_node: _, ...rest } = edge as { end_node?: unknown };
+  return flatten(rest);
+}
 
 /**
  * The value an attribute is themed by: lists of primitives and flat objects
@@ -159,9 +187,12 @@ export function themeEdges(
   settings: ThemeSettings,
   colors: ThemeColors,
 ) {
-  const nodes = edges.filter((e) => e.node);
-  const edgeKeys = themeKeys(edges.map((e) => e.edge));
-  const nodeKeys = themeKeys(nodes.map((e) => e.node));
+  const attributes = edges.map((e) => ({
+    edge: edgeAttributes(e.edge),
+    node: e.node && flatten(e.node),
+  }));
+  const edgeKeys = themeKeys(attributes.map((a) => a.edge));
+  const nodeKeys = themeKeys(attributes.map((a) => a.node));
   const edgeTheme = edgeKeys.includes(settings.edgeTheme)
     ? settings.edgeTheme
     : "";
@@ -169,9 +200,9 @@ export function themeEdges(
     ? settings.nodeTheme
     : "";
 
-  const values = edges.map((e) => ({
-    value: scalar(e.edge[edgeTheme]),
-    nodeValue: scalar(e.node?.[nodeTheme]),
+  const values = attributes.map((a) => ({
+    value: scalar(a.edge[edgeTheme]),
+    nodeValue: scalar(a.node?.[nodeTheme]),
   }));
   const edgeScale = edgeTheme
     ? makeScale(

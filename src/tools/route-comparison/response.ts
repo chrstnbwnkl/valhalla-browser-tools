@@ -14,14 +14,14 @@ export type Segment = {
   idx: number;
   leg: number;
   coords: Position[];
-  /** The weight (OSRM) or cost (Valhalla). */
+  /** The cost, read from `weight` in the OSRM format. */
   cost?: number;
   duration?: number;
   distance?: number;
   title: string;
   detail: string;
   arrival: boolean;
-  /** Intersections along it; only OSRM has them, with their turn weights. */
+  /** Intersections along it; only OSRM has them, with their turn costs. */
   intersections: { at: Position; turnCost: number; raw: Json }[];
   raw: Json;
 };
@@ -33,7 +33,7 @@ export type Route = {
   segments: Segment[];
   legCosts: (number | undefined)[];
   cost?: number;
-  /** What the cost is, e.g. the weight_name. */
+  /** What the cost is, e.g. the costing, from weight_name. */
   costName: string;
   duration?: number;
   distance?: number;
@@ -88,7 +88,7 @@ function fromOsrm(data: RouteResponse): Response {
       }),
       legCosts: (route.legs ?? []).map((leg) => leg.weight),
       cost: route.weight,
-      costName: `weight (${route.weight_name ?? "?"})`,
+      costName: `cost (${route.weight_name ?? "?"})`,
       duration: route.duration,
       distance: route.distance,
       distanceUnit: "m",

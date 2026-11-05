@@ -9,7 +9,6 @@ import {
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { MapProvider } from "../../shared/map/context";
-import { LONG_PRESS_MS } from "../../shared/map/Marker";
 import { SERVERS_KEY } from "../../shared/valhalla/servers";
 import { VIEWS_KEY } from "../../shared/valhalla/views";
 import { Map as FakeMap, LngLat } from "../../test/maplibre";
@@ -294,13 +293,15 @@ describe("locate playground", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
-  describe("holding a point", () => {
-    const hold = (marker: HTMLElement) =>
+  describe("clicking a point", () => {
+    const press = (marker: HTMLElement) =>
       fireEvent.pointerDown(marker, { button: 0, clientX: 10, clientY: 10 });
+    const open = (marker: HTMLElement) => {
+      press(marker);
+      fireEvent.click(marker, { button: 0 });
+    };
     const popup = () =>
       screen.queryByRole("dialog", { name: /^Location \d+ options$/ });
-    const pause = () =>
-      act(() => new Promise((done) => setTimeout(done, LONG_PRESS_MS + 50)));
 
     async function twoPoints() {
       const { sent } = serve();
@@ -312,7 +313,7 @@ describe("locate playground", () => {
 
     it("opens the options of just that point", async () => {
       const { sent, user } = await twoPoints();
-      hold(markers()[1]!);
+      open(markers()[1]!);
       const options = within(
         await screen.findByRole("dialog", { name: "Location 2 options" }),
       );
@@ -337,27 +338,22 @@ describe("locate playground", () => {
       ).toBeInTheDocument();
     });
 
-    it("doesn't open on a quick click or when dragging", async () => {
+    it("doesn't open after dragging", async () => {
       await twoPoints();
-      hold(markers()[0]!);
-      fireEvent.pointerUp(markers()[0]!);
-      await pause();
-      expect(popup()).not.toBeInTheDocument();
-
-      hold(markers()[0]!);
-      fireEvent.pointerMove(markers()[0]!, { clientX: 30, clientY: 10 });
-      await pause();
+      press(markers()[0]!);
+      fireEvent.pointerMove(document, { clientX: 30, clientY: 10 });
+      fireEvent.click(markers()[0]!, { button: 0 });
       expect(popup()).not.toBeInTheDocument();
     });
 
     it("closes with its × button, a click on the map or removing points", async () => {
       const { map, sent } = await twoPoints();
-      hold(markers()[0]!);
+      open(markers()[0]!);
       await screen.findByRole("dialog");
       act(() => [...map.popups][0]!.close());
       expect(popup()).not.toBeInTheDocument();
 
-      hold(markers()[0]!);
+      open(markers()[0]!);
       await screen.findByRole("dialog");
       const before = sent().length;
       click(map, 5, 5);
@@ -365,7 +361,7 @@ describe("locate playground", () => {
       expect(sent()).toHaveLength(before);
       expect(request().locations).toHaveLength(2);
 
-      hold(markers()[0]!);
+      open(markers()[0]!);
       await screen.findByRole("dialog");
       fireEvent.contextMenu(markers()[1]!);
       expect(popup()).not.toBeInTheDocument();

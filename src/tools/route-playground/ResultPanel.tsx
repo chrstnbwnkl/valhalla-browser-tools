@@ -71,7 +71,7 @@ export function ResultPanel({
             [
               "steps",
               "Maneuvers",
-              "The steps of the route with their weights and turn weights",
+              "The steps of the route with their costs and turn costs",
             ],
             [
               "edges",
@@ -115,7 +115,7 @@ export function ResultPanel({
         >
           {routes.map((r, i) => (
             <option key={i} value={i}>
-              Route {i} · weight {fmt(r.weight)}
+              Route {i} · cost {fmt(r.weight)}
             </option>
           ))}
         </Select>
@@ -127,7 +127,7 @@ export function ResultPanel({
         ) : (
           <>
             <Stat
-              label={`weight (${route.weight_name ?? "?"})`}
+              label={`cost (${route.weight_name ?? "?"})`}
               value={fmt(route.weight)}
             />
             <Stat label="duration" value={fmt(route.duration)} unit="s" />

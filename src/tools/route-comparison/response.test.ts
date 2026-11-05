@@ -4,13 +4,13 @@ import valhalla from "./fixtures/valhalla.json";
 import { parseResponse } from "./response";
 
 describe("parseResponse", () => {
-  it("reads an OSRM response with its alternative, weights and turn weights", () => {
+  it("reads an OSRM response with its alternative, costs and turn costs", () => {
     const response = parseResponse(osrm);
     expect(response.format).toBe("osrm");
     expect(response.routes).toHaveLength(2);
     const [best] = response.routes;
     expect(best!.cost).toBe(osrm.routes[0]!.weight);
-    expect(best!.costName).toBe("weight (auto)");
+    expect(best!.costName).toBe("cost (auto)");
     expect(best!.distanceUnit).toBe("m");
     const steps = osrm.routes[0]!.legs[0]!.steps;
     expect(best!.segments).toHaveLength(steps.length);

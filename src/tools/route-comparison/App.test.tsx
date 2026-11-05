@@ -47,7 +47,7 @@ describe("route comparison", () => {
     expect(screen.queryByRole("region")).not.toBeInTheDocument();
   });
 
-  it("shows a pasted OSRM response with its weights, turn weights and alternative", async () => {
+  it("shows a pasted OSRM response with its costs, turn costs and alternative", async () => {
     const user = setup();
     await add(user, osrm);
     const [map] = await maps(1);
@@ -55,14 +55,14 @@ describe("route comparison", () => {
 
     const card = pane("Response 1");
     expect(card.getByText("osrm")).toBeInTheDocument();
-    expect(card.getByText("weight (auto)").nextSibling).toHaveTextContent(
+    expect(card.getByText("cost (auto)").nextSibling).toHaveTextContent(
       String(osrm.routes[0]!.weight),
     );
     const steps = osrm.routes[0]!.legs[0]!.steps;
     expect(map!.data("segments")!.features.length).toBeGreaterThan(1);
     // a label per step but the arrival
     expect(screen.getAllByTitle(/^step \d+: /)).toHaveLength(steps.length - 1);
-    expect(screen.getAllByTitle(/turn_weight$/).length).toBeGreaterThan(0);
+    expect(screen.getAllByTitle(/turn cost$/).length).toBeGreaterThan(0);
     expect(map!.data("alternatives")!.features).toHaveLength(1);
     // the first pane shows its route
     expect(map!.fitted).not.toBeNull();
@@ -71,7 +71,7 @@ describe("route comparison", () => {
       card.getByRole("combobox", { name: "Route" }),
       "1",
     );
-    expect(card.getByText("weight (auto)").nextSibling).toHaveTextContent(
+    expect(card.getByText("cost (auto)").nextSibling).toHaveTextContent(
       String(osrm.routes[1]!.weight),
     );
   });

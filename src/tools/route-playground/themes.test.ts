@@ -4,6 +4,8 @@ import { routeEdges } from "./edges";
 import leg0 from "./fixtures/trace-leg0.json";
 import {
   DEFAULT_THEMES,
+  edgeAttributes,
+  flatten,
   makeScale,
   scalar,
   themeEdges,
@@ -45,7 +47,37 @@ describe("scalar", () => {
   });
 });
 
+describe("flatten", () => {
+  it("expands nested objects into parent_child keys, leaving lists", () => {
+    expect(
+      flatten({
+        speed: 5,
+        limit: { value: 50, unit: { name: "kph" } },
+        names: ["A"],
+      }),
+    ).toEqual({
+      speed: 5,
+      limit_value: 50,
+      limit_unit_name: "kph",
+      names: ["A"],
+    });
+  });
+
+  it("leaves an edge's end node out", () => {
+    expect(edgeAttributes({ id: 1, end_node: { type: "street" } })).toEqual({
+      id: 1,
+    });
+  });
+});
+
 describe("makeScale", () => {
+  it("doesn't ramp identifiers, headings or bit masks", () => {
+    for (const key of ["way_id", "begin_heading", "bicycle_network"])
+      expect(
+        makeScale(key, [1, 2], ["surface", "ink"], colors).ramp,
+      ).toBeUndefined();
+  });
+
   it("ramps numbers from min to max", () => {
     const scale = makeScale(
       "speed",
@@ -108,5 +140,26 @@ describe("themeEdges", () => {
     expect(themed.nodeTheme).toBe("");
     expect(themed.edges[0]!.label).toBe(String(leg0.edges[0]!.road_class));
     expect(themed.edgeScale).not.toBeNull();
+  });
+
+  it("ramps numbers nested in objects", () => {
+    const nested = routeEdges([
+      {
+        path: {
+          ...leg0,
+          edges: leg0.edges.map((e, i) => ({ ...e, grade: { value: i } })),
+        },
+        snapped: false,
+      },
+    ]);
+    const themed = themeEdges(
+      nested,
+      { ...DEFAULT_THEMES, edgeTheme: "grade_value" },
+      colors,
+    );
+    expect(themed.edgeKeys).toContain("grade_value");
+    expect(themed.edgeKeys).not.toContain("grade");
+    expect(themed.edgeScale?.ramp).toBeDefined();
+    expect(themed.edges[2]!.value).toBe(2);
   });
 });
