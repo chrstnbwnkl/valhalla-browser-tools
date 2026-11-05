@@ -1,10 +1,10 @@
 {
-  "id": "Location.waiting",
-  "name": "waiting",
-  "scope": "location option",
-  "type": "number",
-  "minimum": 0,
-  "description": "Waiting time in seconds at this stop (break/break_through only, not origin/destination).",
+  "id": "Request.matrix_locations",
+  "name": "matrix_locations",
+  "scope": "request option · /sources_to_targets",
+  "type": "integer",
+  "minimum": 1,
+  "description": "Early-exit after finding this many targets. Only valid for TDMatrix algorithm.",
   "badge": null,
   "notes": []
 }
