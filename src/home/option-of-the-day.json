@@ -1,10 +1,12 @@
 {
-  "id": "Request.matrix_locations",
-  "name": "matrix_locations",
-  "scope": "request option · /sources_to_targets",
-  "type": "integer",
-  "minimum": 1,
-  "description": "Early-exit after finding this many targets. Only valid for TDMatrix algorithm.",
+  "id": "Bicycle.use_roads",
+  "name": "use_roads",
+  "scope": "costing option · bicycle",
+  "type": "number",
+  "default": 0.25,
+  "minimum": 0,
+  "maximum": 1,
+  "description": "A cyclist's propensity to use roads alongside other vehicles. This is a range of values from 0 to 1, where 0 attempts to avoid roads and stay on cycleways and paths, and 1 indicates the rider is more comfortable riding on roads. Based on the `use_roads` factor, roads with certain classifications and higher speeds are penalized in an attempt to avoid them when finding the best path.",
   "badge": null,
   "notes": []
 }
