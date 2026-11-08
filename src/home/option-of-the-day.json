@@ -1,10 +1,10 @@
 {
-  "id": "Location.waiting",
-  "name": "waiting",
+  "id": "Location.search_filter.exclude_restricted",
+  "name": "search_filter.exclude_restricted",
   "scope": "location option",
-  "type": "number",
-  "minimum": 0,
-  "description": "Waiting time in seconds at this stop (break/break_through only, not origin/destination).",
-  "badge": null,
+  "type": "boolean",
+  "default": false,
+  "description": "Whether to exclude roads whose access restrictions the costing's vehicle exceeds, such as height, width, length, weight, axle load, axle count and hazmat. If true, routes can't start or end on such edges. Time-dependent restrictions and those that exempt destinations are not considered.",
+  "badge": "new in Valhalla",
   "notes": []
 }
