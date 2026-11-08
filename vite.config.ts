@@ -11,6 +11,7 @@ const PAGES = [
   "route-playground/index.html",
   "route-comparison/index.html",
   "route-attributes/index.html",
+  "fitfile-editor/index.html",
 ];
 
 export default defineConfig({

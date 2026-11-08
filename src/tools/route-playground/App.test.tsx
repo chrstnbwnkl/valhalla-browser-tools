@@ -11,6 +11,7 @@ import { describe, expect, it, vi } from "vitest";
 import { MapProvider } from "../../shared/map/context";
 import { Map as FakeMap, LngLat } from "../../test/maplibre";
 import { TerraDraw } from "../../test/terra-draw";
+import { DRAFT_KEY } from "../../shared/fitDraft";
 import { FILTERS_KEY } from "./api";
 import { App, URL_PARAM } from "./App";
 import mapMatched from "./fixtures/map-match.json";
@@ -563,5 +564,21 @@ describe("route playground", () => {
     fireEvent.pointerDown(markers()[0]!, { button: 0, clientX: 0, clientY: 0 });
     fireEvent.click(markers()[0]!, { button: 0 });
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("hands the route to the fitfile editor from the export menu", async () => {
+    const { user } = await routed();
+    const open = vi.spyOn(window, "open").mockImplementation(() => null);
+    await user.click(
+      screen.getByRole("button", { name: "More FIT course options" }),
+    );
+    await user.click(
+      screen.getByRole("menuitem", { name: "Open in fitfile editor" }),
+    );
+    expect(open).toHaveBeenCalledWith("../fitfile-editor/", "_blank");
+    const draft = JSON.parse(localStorage.getItem(DRAFT_KEY)!);
+    expect(draft.source.costing).toBe("auto");
+    expect(draft.points).toHaveLength(12);
+    open.mockRestore();
   });
 });

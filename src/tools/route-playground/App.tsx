@@ -617,6 +617,7 @@ export function App() {
           {result && (
             <ResultPanel
               result={result}
+              server={servers.selected}
               routeIdx={routeIdx}
               onRouteIdx={(idx) => {
                 setRouteIdx(idx);

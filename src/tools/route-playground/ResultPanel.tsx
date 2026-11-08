@@ -1,5 +1,6 @@
 import type { Position } from "geojson";
-import { useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
+import { encodeCourse } from "../../shared/fit";
 import { Button } from "../../shared/ui/Button";
 import { CopyButton } from "../../shared/ui/CopyButton";
 import { Select } from "../../shared/ui/Input";
@@ -10,7 +11,16 @@ import { EdgeList } from "./EdgeList";
 import type { TracedLeg } from "./edges";
 import { fmt } from "../../shared/format";
 import type { RouteResult } from "./api";
-import type { FlatStep } from "../../shared/valhalla/osrm";
+import type { FlatStep, Route } from "../../shared/valhalla/osrm";
+import {
+  buildCourse,
+  courseName,
+  download,
+  fitFilename,
+} from "../../shared/course";
+import { EDITOR_PATH, createDraft, storeDraft } from "../../shared/fitDraft";
+import { Menu } from "../../shared/ui/Menu";
+import type { Json } from "../../shared/valhalla/request";
 import { StepList } from "./StepList";
 import { ThemeControls } from "./ThemeControls";
 import type { ThemeSettings, themeEdges } from "./themes";
@@ -19,6 +29,8 @@ export type View = "steps" | "edges";
 
 type Props = {
   result: RouteResult;
+  /** Where elevation for the FIT export comes from. */
+  server: string;
   routeIdx: number;
   onRouteIdx: (idx: number) => void;
   view: View;
@@ -39,6 +51,7 @@ type Props = {
 
 export function ResultPanel({
   result,
+  server,
   routeIdx,
   onRouteIdx,
   view,
@@ -159,6 +172,16 @@ export function ResultPanel({
         )}
       </div>
 
+      <FitExport
+        server={server}
+        route={route}
+        costing={
+          typeof result.sent.costing === "string" ? result.sent.costing : ""
+        }
+        start={result.data.waypoints?.[0]?.location}
+        sent={result.sent}
+      />
+
       {view === "edges" && edges && (
         <ThemeControls
           settings={themes}
@@ -185,6 +208,105 @@ export function ResultPanel({
           highlighted={highlighted}
           onHover={onHover}
           onFocus={onFocus}
+        />
+      )}
+    </div>
+  );
+}
+
+function FitExport({
+  server,
+  route,
+  costing,
+  start,
+  sent,
+}: {
+  server: string;
+  route: Route;
+  costing: string;
+  start?: Position;
+  sent: Json;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [menuAt, setMenuAt] = useState<{ x: number; y: number } | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const pending = useRef<AbortController | null>(null);
+
+  async function exportFit() {
+    pending.current?.abort();
+    const controller = new AbortController();
+    pending.current = controller;
+    setBusy(true);
+    setNote("Requesting heights…");
+    try {
+      const { course, missing } = await buildCourse(server, route, costing, {
+        start,
+        signal: controller.signal,
+      });
+      download(encodeCourse(course), fitFilename(courseName(route, costing)));
+      const points = `${course.coursePoints.length} course points`;
+      setNote(
+        missing
+          ? `${points}, no elevation: ${missing}`
+          : `${points}, ↑${Math.round(course.ascent ?? 0)} m ↓${Math.round(course.descent ?? 0)} m`,
+      );
+    } catch (e) {
+      if (!controller.signal.aborted) setNote((e as Error).message);
+    } finally {
+      if (pending.current === controller) setBusy(false);
+    }
+  }
+
+  function openEditor() {
+    const draft = createDraft({ server, costing, sent, route, start });
+    if (!storeDraft(draft))
+      return setNote("The route is too large to hand to the editor.");
+    window.open(EDITOR_PATH, "_blank");
+  }
+
+  return (
+    <div className="m-3 flex flex-wrap items-center gap-2 text-ink-muted">
+      Export
+      <span className="inline-flex">
+        <Button
+          size="sm"
+          className="rounded-r-none"
+          disabled={busy}
+          title="A Garmin FIT course of this route: elevation from /height, a course point for every maneuver and for the start and end of every leg, times from the step durations"
+          onClick={() => void exportFit()}
+        >
+          FIT course
+        </Button>
+        <Button
+          size="sm"
+          className="-ml-px rounded-l-none px-1.5"
+          aria-label="More FIT course options"
+          aria-haspopup="menu"
+          aria-expanded={menuAt !== null}
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            setMenuAt({ x: rect.left, y: rect.bottom + 4 });
+          }}
+        >
+          <svg viewBox="0 0 16 16" aria-hidden>
+            <path
+              d="M4 6l4 4 4-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </Button>
+      </span>
+      {note && <span className="text-[13px]">{note}</span>}
+      {menuAt && (
+        <Menu
+          at={menuAt}
+          title="FIT course"
+          items={[{ label: "Open in fitfile editor", action: openEditor }]}
+          onClose={() => setMenuAt(null)}
         />
       )}
     </div>
