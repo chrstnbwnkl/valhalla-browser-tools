@@ -1,9 +1,16 @@
 {
-  "id": "Transit.filters",
-  "name": "filters",
-  "scope": "costing option · multimodal, transit",
-  "type": "object",
-  "description": "Filter routes or operators by Onestop ID. Each key takes an `action` (`include`/`exclude`) and a list of `ids`. Note: stop filtering is currently disabled.",
+  "id": "Request.shape_format",
+  "name": "shape_format",
+  "scope": "request option · all endpoints but /isochrone, /locate, /expansion",
+  "type": "string",
+  "default": "polyline6",
+  "enum": [
+    "polyline6",
+    "polyline5",
+    "geojson",
+    "no_shape"
+  ],
+  "description": "Not all formats are supported by all endpoints, e.g. `no_shape` is not valid for isochrone.",
   "badge": null,
   "notes": []
 }
