@@ -1,16 +1,12 @@
 {
-  "id": "Request.shape_format",
-  "name": "shape_format",
-  "scope": "request option · all endpoints but /isochrone, /locate, /expansion",
-  "type": "string",
-  "default": "polyline6",
-  "enum": [
-    "polyline6",
-    "polyline5",
-    "geojson",
-    "no_shape"
-  ],
-  "description": "Not all formats are supported by all endpoints, e.g. `no_shape` is not valid for isochrone.",
-  "badge": null,
+  "id": "Motorcycle.use_curvature",
+  "name": "use_curvature",
+  "scope": "costing option · motorcycle",
+  "type": "number",
+  "default": 0.5,
+  "minimum": 0,
+  "maximum": 1,
+  "description": "This value indicates the preference for curvy roads over straight roads. Values above `0.5` increasingly penalize straight roads outside urban areas, roads in built-up areas, up to `1` which strongly prefers curvy rural roads. Values of `0.5` and below have no effect.",
+  "badge": "new in Valhalla",
   "notes": []
 }
