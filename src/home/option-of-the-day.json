@@ -1,12 +1,9 @@
 {
-  "id": "Motorcycle.use_curvature",
-  "name": "use_curvature",
-  "scope": "costing option · motorcycle",
-  "type": "number",
-  "default": 0.5,
-  "minimum": 0,
-  "maximum": 1,
-  "description": "This value indicates the preference for curvy roads over straight roads. Values above `0.5` increasingly penalize straight roads outside urban areas, roads in built-up areas, up to `1` which strongly prefers curvy rural roads. Values of `0.5` and below have no effect.",
-  "badge": "new in Valhalla",
+  "id": "Request.linear_cost_factors",
+  "name": "linear_cost_factors",
+  "scope": "request option · all endpoints but /height",
+  "type": "array of LinearCostFactor",
+  "description": "Customized cost factors that influence path finding, specified as an array of JSON objects. Objects can be either a GeoJSON linestring feature and a `\"factor\"` property or a plain object with a \"shape\" key, whose value needs to be an encoded polyline (with 6 digit precision), and a \"factor\" key whose value needs to be float. Valhalla will perform an edge walk (see the map matching documentation for more info) to match the geometry onto edges and use those factors in costing. Edges with factors larger than 1 will be increasingly avoided, while edges with factors smaller than 1 increasingly favored.",
+  "badge": null,
   "notes": []
 }
