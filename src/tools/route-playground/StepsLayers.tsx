@@ -28,6 +28,8 @@ type Props = {
   waypoints: RouteResponse["waypoints"];
   highlighted: number | null;
   colors: ThemeColors;
+  /** The cost of every step and the turn costs, as labels. */
+  costLabels?: boolean;
   onHover: (idx: number | null) => void;
   onInspect: (title: string, object: Intersection, at: Position) => void;
 };
@@ -39,6 +41,7 @@ export function StepsLayers({
   waypoints,
   highlighted,
   colors,
+  costLabels = true,
   onHover,
   onInspect,
 }: Props) {
@@ -186,6 +189,7 @@ export function StepsLayers({
   );
   useLayerEvent("mouseleave", "steps", () => onHover(null));
 
+  if (!costLabels) return null;
   return (
     <>
       {labelled.map((s) => (

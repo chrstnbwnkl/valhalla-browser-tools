@@ -4,6 +4,7 @@ import { OptionOfTheDay, type Option } from "./OptionOfTheDay";
 const PLAYGROUNDS = [
   { href: "route-playground/", title: "Route playground" },
   { href: "locate-playground/", title: "Locate playground" },
+  { href: "round-trip-playground/", title: "Round trip playground" },
 ];
 
 const TOOLS = [

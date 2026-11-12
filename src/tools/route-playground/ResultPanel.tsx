@@ -214,7 +214,7 @@ export function ResultPanel({
   );
 }
 
-function FitExport({
+export function FitExport({
   server,
   route,
   costing,

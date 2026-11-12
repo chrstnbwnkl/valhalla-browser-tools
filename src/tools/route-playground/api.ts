@@ -66,10 +66,11 @@ export async function fetchRoute(
   server: string,
   request: Json,
   signal: AbortSignal,
+  endpoint = "route",
 ) {
   let data: unknown;
   try {
-    data = await post(server, "route", request, signal);
+    data = await post(server, endpoint, request, signal);
   } catch (e) {
     if (signal.aborted) throw e;
     throw new Error(`Request to ${server} failed: ${(e as Error).message}`, {
