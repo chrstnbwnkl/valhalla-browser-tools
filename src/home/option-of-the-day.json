@@ -1,9 +1,10 @@
 {
-  "id": "Request.linear_cost_factors",
-  "name": "linear_cost_factors",
-  "scope": "request option · all endpoints but /height",
-  "type": "array of LinearCostFactor",
-  "description": "Customized cost factors that influence path finding, specified as an array of JSON objects. Objects can be either a GeoJSON linestring feature and a `\"factor\"` property or a plain object with a \"shape\" key, whose value needs to be an encoded polyline (with 6 digit precision), and a \"factor\" key whose value needs to be float. Valhalla will perform an edge walk (see the map matching documentation for more info) to match the geometry onto edges and use those factors in costing. Edges with factors larger than 1 will be increasingly avoided, while edges with factors smaller than 1 increasingly favored.",
+  "id": "Location.search_filter.exclude_bridge",
+  "name": "search_filter.exclude_bridge",
+  "scope": "location option",
+  "type": "boolean",
+  "default": false,
+  "description": "Whether to exclude roads marked as bridges.",
   "badge": null,
   "notes": []
 }
