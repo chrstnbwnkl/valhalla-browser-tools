@@ -1,10 +1,12 @@
 {
-  "id": "Location.search_filter.exclude_bridge",
-  "name": "search_filter.exclude_bridge",
-  "scope": "location option",
-  "type": "boolean",
-  "default": false,
-  "description": "Whether to exclude roads marked as bridges.",
+  "id": "Request.denoise",
+  "name": "denoise",
+  "scope": "request option · /isochrone",
+  "type": "number",
+  "default": 1.0,
+  "minimum": 0,
+  "maximum": 1,
+  "description": "Factor to remove smaller contours, e.g. a value of 0.5 drops any contours that are less than half the area of the largest contour.",
   "badge": null,
   "notes": []
 }
