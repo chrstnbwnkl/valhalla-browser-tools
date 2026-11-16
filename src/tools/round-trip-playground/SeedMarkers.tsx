@@ -1,140 +1,57 @@
 import { useMemo } from "react";
-import type { ThemeColors } from "../../shared/theme/colors";
-import { fc, line, point } from "../../shared/map/geo";
+import { fc, point } from "../../shared/map/geo";
 import { useGeoJSONSource, useLayer } from "../../shared/map/hooks";
 import { Marker } from "../../shared/map/Marker";
-import type { Seed, SeedCandidate } from "./request";
+import type { ThemeColors } from "../../shared/theme/colors";
+import type { Seed } from "./request";
 
-const GROUP_COLORS = ["blue", "amber", "ink"] as const;
+const lonLat = (seed: Seed) => seed.location.map((c) => c.toFixed(6)).join(",");
 
-/** The colour of seed group `group`, counted from 1 as the server does. */
-export const groupColor = (colors: ThemeColors, group: number) =>
-  colors[GROUP_COLORS[(Math.max(1, group) - 1) % GROUP_COLORS.length]!];
-
-/** The seeds the round trip on show passes through, numbered in that order. */
-export function SeedMarkers({
+/**
+ * The turning points of the round trip on show: the unused ones as grey rings,
+ * the two it uses numbered in the order it passes them.
+ */
+export function SeedLayers({
   seeds,
   colors,
 }: {
   seeds: Seed[];
   colors: ThemeColors;
 }) {
-  return seeds.map((seed, i) => (
-    <Marker
-      key={`seed:${i}:${seed.location.join(",")}`}
-      lngLat={seed.location as [number, number]}
-      className="z-[1]"
-    >
-      <div
-        className="seed-marker size-[20px] rounded-sm border-3 bg-surface text-center font-mono text-[11px]/[14px] font-bold text-ink"
-        style={{ borderColor: groupColor(colors, seed.group) }}
-        title={`seed ${i + 1} · group ${seed.group} · ${seed.location.map((c) => c.toFixed(6)).join(",")}`}
-      >
-        {i + 1}
-      </div>
-    </Marker>
-  ));
-}
-
-/**
- * Every sampled seed and every candidate of a debug response: dropped samples
- * as small grey dots, candidates as rings in their group's colour with a dashed
- * line to where they snapped.
- */
-export function SeedCandidateLayers({
-  dropped,
-  candidates,
-  colors,
-}: {
-  dropped: Seed[];
-  candidates: SeedCandidate[];
-  colors: ThemeColors;
-}) {
   useGeoJSONSource(
-    "seed-dropped",
-    useMemo(() => fc(dropped.map((s) => point(s.location))), [dropped]),
-  );
-  useGeoJSONSource(
-    "seed-snaps",
+    "seeds-unused",
     useMemo(
-      () =>
-        fc(
-          candidates.flatMap((c) =>
-            c.snapped
-              ? [
-                  line([c.location, c.snapped], {
-                    color: groupColor(colors, c.group),
-                  }),
-                ]
-              : [],
-          ),
-        ),
-      [candidates, colors],
+      () => fc(seeds.filter((s) => !s.used).map((s) => point(s.location))),
+      [seeds],
     ),
   );
-  useGeoJSONSource(
-    "seed-snapped",
-    useMemo(
-      () =>
-        fc(
-          candidates.flatMap((c) =>
-            c.snapped
-              ? [point(c.snapped, { color: groupColor(colors, c.group) })]
-              : [],
-          ),
-        ),
-      [candidates, colors],
-    ),
-  );
-  useGeoJSONSource(
-    "seed-candidates",
-    useMemo(
-      () =>
-        fc(
-          candidates.map((c) =>
-            point(c.location, { color: groupColor(colors, c.group) }),
-          ),
-        ),
-      [candidates, colors],
-    ),
-  );
-
   useLayer({
-    id: "seed-dropped",
+    id: "seeds-unused",
     type: "circle",
-    source: "seed-dropped",
+    source: "seeds-unused",
     paint: {
-      "circle-radius": 3,
-      "circle-color": colors["ink-subtle"],
-      "circle-opacity": 0.7,
-    },
-  });
-  useLayer({
-    id: "seed-snaps",
-    type: "line",
-    source: "seed-snaps",
-    paint: {
-      "line-color": ["get", "color"],
-      "line-width": 1.5,
-      "line-dasharray": [2, 2],
-    },
-  });
-  useLayer({
-    id: "seed-snapped",
-    type: "circle",
-    source: "seed-snapped",
-    paint: { "circle-radius": 3, "circle-color": ["get", "color"] },
-  });
-  useLayer({
-    id: "seed-candidates",
-    type: "circle",
-    source: "seed-candidates",
-    paint: {
-      "circle-radius": 6,
+      "circle-radius": 5,
       "circle-color": colors.surface,
-      "circle-stroke-width": 2.5,
-      "circle-stroke-color": ["get", "color"],
+      "circle-stroke-width": 2,
+      "circle-stroke-color": colors["ink-muted"],
     },
   });
-  return null;
+
+  return seeds
+    .filter((s) => s.used)
+    .map((seed, i) => (
+      <Marker
+        key={`seed:${i}:${lonLat(seed)}`}
+        lngLat={seed.location as [number, number]}
+        className="z-[1]"
+      >
+        <div
+          className="seed-marker size-[20px] rounded-sm border-3 bg-surface text-center font-mono text-[11px]/[14px] font-bold text-ink"
+          style={{ borderColor: colors.blue }}
+          title={`turning point ${i + 1} · ${lonLat(seed)}`}
+        >
+          {i + 1}
+        </div>
+      </Marker>
+    ));
 }

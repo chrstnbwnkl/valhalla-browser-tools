@@ -29,8 +29,9 @@ async function setup(url = "/") {
       <App />
     </MapProvider>,
   );
+  // the controls are added once the map has loaded
   await waitFor(() =>
-    expect(FakeMap.instances.at(-1)!.sources.size).toBeGreaterThan(0),
+    expect(FakeMap.instances.at(-1)!.controls.size).toBeGreaterThan(0),
   );
   return { user, map: FakeMap.instances.at(-1)! };
 }
@@ -112,9 +113,9 @@ describe("round trip playground", () => {
     await waitFor(() =>
       expect(map.data("steps")?.features.length).toBeGreaterThan(0),
     );
-    // three seed groups at the default heading tolerance of 45°
-    expect(map.data("seed-area")!.features).toHaveLength(3);
-    expect(map.data("heading")!.features).toHaveLength(1);
+    // no helper geometry, only the route and the start
+    for (const id of ["seed-area", "heading"])
+      expect(map.data(id)).toBeUndefined();
   });
 
   it("replaces the start instead of adding one, keeping its options", async () => {
@@ -150,9 +151,9 @@ describe("round trip playground", () => {
     );
     await user.type(
       screen.getByRole("spinbutton", {
-        name: "round_trip_options.overlap_factor",
+        name: "round_trip_options.distance_tolerance",
       }),
-      "0{Enter}",
+      "0.05{Enter}",
     );
     await user.type(
       screen.getByRole("spinbutton", { name: "alternates" }),
@@ -162,69 +163,28 @@ describe("round trip playground", () => {
       distance: 20000,
       heading: 90,
       heading_tolerance: 10,
-      overlap_factor: 0,
+      distance_tolerance: 0.05,
     });
     expect(request().alternates).toBe(2);
-    // a single seed group below a tolerance of 15°
-    expect(map.data("seed-area")!.features).toHaveLength(1);
 
     await user.clear(screen.getByRole("spinbutton", { name: "alternates" }));
     await user.tab();
     expect(request()).not.toHaveProperty("alternates");
   });
 
-  it("shows the seeds of the round trip on show, without cost labels", async () => {
+  it("shows the turning points on the map, numbering the two used ones, without cost labels", async () => {
     const seeded = {
       ...route,
       routes: [
         {
           ...route.routes[0],
+          // out candidates, then back candidates; group 2 are the used ones
           round_trip_seeds: [
             { location: [13.39, 52.52], group: 1 },
-            { location: [13.4, 52.51], group: 2 },
-          ],
-        },
-      ],
-    };
-    serve(seeded);
-    const { map } = await setup();
-    click(map, START);
-    const seeds = within(await screen.findByRole("list", { name: "Seeds" }));
-    expect(seeds.getAllByRole("listitem").map((li) => li.textContent)).toEqual([
-      "1group 113.390000,52.520000",
-      "2group 213.400000,52.510000",
-    ]);
-    expect(screen.getAllByTitle(/^seed \d/).map((m) => m.textContent)).toEqual([
-      "1",
-      "2",
-    ]);
-    expect(screen.queryAllByTitle(/cost$/)).toHaveLength(0);
-  });
-
-  it("shows every seed candidate of a debug response, numbering the used ones", async () => {
-    const seeded = {
-      ...route,
-      round_trip_seed_samples: [
-        { location: [13.39, 52.52], group: 1 },
-        { location: [13.38, 52.53], group: 1 },
-        { location: [13.4, 52.51], group: 2 },
-        { location: [13.41, 52.5], group: 2 },
-      ],
-      round_trip_seed_candidates: [
-        {
-          location: [13.39, 52.52],
-          snapped_location: [13.391, 52.52],
-          group: 1,
-        },
-        { location: [13.4, 52.51], snapped_location: [13.4, 52.511], group: 2 },
-        { location: [13.41, 52.5], group: 2 },
-      ],
-      routes: [
-        {
-          ...route.routes[0],
-          round_trip_seeds: [
-            { location: [13.39, 52.52], group: 1 },
+            { location: [13.38, 52.53], group: 2 },
+            { location: [13.4, 52.51], group: 1 },
             { location: [13.41, 52.5], group: 2 },
+            { location: [13.42, 52.49], group: 1 },
           ],
         },
       ],
@@ -232,40 +192,17 @@ describe("round trip playground", () => {
     serve(seeded);
     const { map } = await setup();
     click(map, START);
-    const seeds = within(await screen.findByRole("list", { name: "Seeds" }));
-    expect(seeds.getAllByRole("listitem").map((li) => li.textContent)).toEqual([
-      "1group 1snap 68 m13.390000,52.520000",
-      "–group 2snap 111 m13.400000,52.510000",
-      "2group 213.410000,52.500000",
-    ]);
     expect(
-      screen.getByText("Seeds · 4 sampled · 3 candidates · 2 used"),
-    ).toBeInTheDocument();
-    expect(map.data("seed-candidates")!.features).toHaveLength(3);
-    expect(map.data("seed-snaps")!.features).toHaveLength(2);
-    expect(map.data("seed-snapped")!.features).toHaveLength(2);
-    // the one sample that didn't become a candidate
-    expect(map.data("seed-dropped")!.features).toHaveLength(1);
-    expect(screen.getAllByTitle(/^seed \d/).map((m) => m.textContent)).toEqual([
-      "1",
-      "2",
-    ]);
-    // the seeds are drawn over the route
+      (await screen.findAllByTitle(/^turning point \d/)).map(
+        (m) => m.textContent,
+      ),
+    ).toEqual(["1", "2"]);
+    expect(screen.queryByRole("list", { name: "Turning points" })).toBeNull();
+    expect(map.data("seeds-unused")!.features).toHaveLength(3);
+    // drawn over the route
     const ids = map.layers.map((l) => l.id);
-    expect(ids.indexOf("seed-candidates")).toBeGreaterThan(
-      ids.indexOf("steps"),
-    );
-  });
-
-  it("asks for verbose when the response has no seeds", async () => {
-    serve();
-    const { user, map } = await setup();
-    await user.click(screen.getByRole("checkbox", { name: "verbose" }));
-    click(map, START);
-    expect(
-      await screen.findByText(/^Send with verbose to see the seeds/),
-    ).toBeInTheDocument();
-    expect(request()).toHaveProperty("verbose", false);
+    expect(ids.indexOf("seeds-unused")).toBeGreaterThan(ids.indexOf("steps"));
+    expect(screen.queryAllByTitle(/cost$/)).toHaveLength(0);
   });
 
   it("links the current view on openstreetmap.org in a new tab", async () => {
@@ -280,22 +217,6 @@ describe("round trip playground", () => {
       "href",
       "https://www.openstreetmap.org/#map=14/52.51700/13.38880",
     );
-  });
-
-  it("wiggles the start to get other seeds, keeping its options", async () => {
-    const { sent } = serve();
-    const { user, map } = await setup();
-    const wiggle = screen.getByRole("button", { name: "Wiggle" });
-    expect(wiggle).toBeDisabled();
-    click(map, START);
-    await screen.findByRole("status");
-    await user.click(wiggle);
-    const [moved] = request().locations;
-    expect(Math.abs(moved.lon - 13.3888)).toBeGreaterThan(0);
-    expect(Math.abs(moved.lon - 13.3888)).toBeLessThan(3e-6);
-    expect(Math.abs(moved.lat - 52.517)).toBeGreaterThan(0);
-    expect(Math.abs(moved.lat - 52.517)).toBeLessThan(3e-6);
-    expect(sent().at(-1).locations).toEqual([moved]);
   });
 
   it("points the heading at a right-clicked spot", async () => {

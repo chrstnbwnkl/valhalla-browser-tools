@@ -46,17 +46,13 @@ import {
   ROUND_TRIP_FIELDS,
   START_OPTIONS,
   bearing,
-  effectiveOptions,
   fieldOf,
-  droppedSamples,
-  seedDebugOf,
   seedsOf,
-  wiggled,
   withField,
 } from "./request";
 import { ResultPanel } from "./ResultPanel";
 import { RoundTripLayers, START_MARKER } from "./RoundTripLayers";
-import { SeedCandidateLayers, SeedMarkers } from "./SeedMarkers";
+import { SeedLayers } from "./SeedMarkers";
 
 // the parameter Valhalla itself accepts on GET requests
 export const URL_PARAM = "json";
@@ -65,7 +61,7 @@ const DEFAULT_REQUEST = {
   locations: [],
   costing: "bicycle",
   round_trip_options: { distance: 20000 },
-  // only verbose responses have the seeds
+  // only verbose responses have the turning points
   verbose: true,
   format: FORMAT,
 };
@@ -102,7 +98,6 @@ export function App() {
   );
   const start = useMemo(() => startOf(request), [request]);
   const startAt = start && positionOf(start);
-  const options = useMemo(() => effectiveOptions(request), [request]);
   const costing = typeof request?.costing === "string" ? request.costing : "";
   // the options the start gets when it is placed anew
   const [template, setTemplate] = useState<Location>({});
@@ -112,7 +107,6 @@ export function App() {
   const [result, setResult] = useState<RouteResult | null>(null);
   const [routeIdx, setRouteIdx] = useState(0);
   const [highlighted, setHighlighted] = useState<number | null>(null);
-  const [showSeedArea, setShowSeedArea] = useState(true);
   const [editing, setEditing] = useState(false);
   const [inspected, setInspected] = useState<Inspected | null>(null);
   const [menu, setMenu] = useState<MenuState | null>(null);
@@ -126,11 +120,6 @@ export function App() {
   const first = result?.data.waypoints?.[0]?.location;
   const steps = useMemo(() => (route ? flattenSteps(route) : []), [route]);
   const seeds = useMemo(() => seedsOf(route), [route]);
-  const seedDebug = useMemo(() => seedDebugOf(result?.data), [result]);
-  const dropped = useMemo(
-    () => droppedSamples(seedDebug.samples, seedDebug.candidates),
-    [seedDebug],
-  );
   const coords = useMemo(
     () => (route ? routeCoords(route, first) : []),
     [route, first],
@@ -241,12 +230,6 @@ export function App() {
       ...req,
       locations: [{ ...start, lat: +lat.toFixed(6), lon: +lng.toFixed(6) }],
     }));
-  }
-
-  function wiggleStart() {
-    if (!startAt) return;
-    const [lon, lat] = wiggled(startAt);
-    edit((req) => ({ ...req, locations: [{ ...start, lat, lon }] }));
   }
 
   function clearStart() {
@@ -371,13 +354,6 @@ export function App() {
           <Button variant="primary" title="Ctrl+Enter" onClick={() => send()}>
             Send
           </Button>
-          <Button
-            disabled={!startAt}
-            title="Move the start by a millionth of a degree or two (about 0.1 m): the server seeds its points from the start, so they all land elsewhere"
-            onClick={wiggleStart}
-          >
-            Wiggle
-          </Button>
           <Button onClick={clearStart}>Clear start</Button>
           <CommitInput
             mono
@@ -397,7 +373,7 @@ export function App() {
           </datalist>
           <Toggle
             className="flex-none"
-            title="Only verbose responses have the seeds the round trips pass through"
+            title="Only verbose responses have the turning points the server considered"
             checked={request?.verbose === true}
             onChange={(e) => setVerbose(e.target.checked)}
           >
@@ -441,15 +417,6 @@ export function App() {
               }}
               onChange={setField}
             />
-            <div className="px-3 pb-3">
-              <Toggle
-                title="Between which distances and in which sectors the server places the points the round trip goes through, as the current implementation does; it may change"
-                checked={showSeedArea}
-                onChange={(e) => setShowSeedArea(e.target.checked)}
-              >
-                show where intermediate points are seeded
-              </Toggle>
-            </div>
           </details>
           <details className="border-b border-line">
             <summary className="label cursor-pointer px-3 py-2">
@@ -492,8 +459,6 @@ export function App() {
                 setInspected(null);
               }}
               steps={steps}
-              seeds={seeds}
-              debug={seedDebug}
               highlighted={highlighted}
               onHover={setHighlighted}
               onFocus={(c) =>
@@ -525,8 +490,6 @@ export function App() {
         <RoundTripLayers
           start={start}
           at={startAt}
-          options={options}
-          showSeedArea={showSeedArea}
           colors={colors}
           editing={editing}
           onEdit={setEditing}
@@ -548,15 +511,8 @@ export function App() {
             }
           />
         )}
-        {/* after the route, so the seeds are drawn over it */}
-        {result && (
-          <SeedCandidateLayers
-            dropped={dropped}
-            candidates={seedDebug.candidates}
-            colors={colors}
-          />
-        )}
-        <SeedMarkers seeds={seeds} colors={colors} />
+        {/* after the route, so the turning points are drawn over it */}
+        {result && <SeedLayers seeds={seeds} colors={colors} />}
         {inspected && (
           <InspectPopup
             title={inspected.title}
