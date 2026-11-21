@@ -1,10 +1,12 @@
 {
-  "id": "Location.waiting",
-  "name": "waiting",
-  "scope": "location option",
+  "id": "Truck.top_speed",
+  "name": "top_speed",
+  "scope": "costing option · truck",
   "type": "number",
-  "minimum": 0,
-  "description": "Waiting time in seconds at this stop (break/break_through only, not origin/destination).",
+  "default": 120,
+  "minimum": 10,
+  "maximum": 252,
+  "description": "Top speed the vehicle can go in km/h. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 km/h. The default value is 120 km/h for truck.",
   "badge": null,
   "notes": []
 }
