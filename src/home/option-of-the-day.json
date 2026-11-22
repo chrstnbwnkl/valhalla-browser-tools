@@ -1,12 +1,10 @@
 {
-  "id": "Truck.top_speed",
-  "name": "top_speed",
-  "scope": "costing option · truck",
+  "id": "Auto.width",
+  "name": "width",
+  "scope": "costing option · auto, bus, taxi",
   "type": "number",
-  "default": 120,
-  "minimum": 10,
-  "maximum": 252,
-  "description": "Top speed the vehicle can go in km/h. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 km/h. The default value is 120 km/h for truck.",
+  "default": 1.9,
+  "description": "Vehicle width in meters for access restriction matching.",
   "badge": null,
   "notes": []
 }
