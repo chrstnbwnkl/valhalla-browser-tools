@@ -1,10 +1,10 @@
 {
-  "id": "Auto.width",
-  "name": "width",
-  "scope": "costing option · auto, bus, taxi",
+  "id": "Location.node_snap_tolerance",
+  "name": "node_snap_tolerance",
+  "scope": "location option",
   "type": "number",
-  "default": 1.9,
-  "description": "Vehicle width in meters for access restriction matching.",
+  "minimum": 0,
+  "description": "Snap-to-node distance tolerance in meters. The default value is service dependent (5 by default).",
   "badge": null,
   "notes": []
 }
