@@ -1,10 +1,9 @@
 {
-  "id": "Location.node_snap_tolerance",
-  "name": "node_snap_tolerance",
-  "scope": "location option",
-  "type": "number",
-  "minimum": 0,
-  "description": "Snap-to-node distance tolerance in meters. The default value is service dependent (5 by default).",
+  "id": "Request.id./route+/optimized_route+/sources_to_targets+/isochrone+/trace_route+/trace_attributes+/locate+/expansion",
+  "name": "id",
+  "scope": "request option · all endpoints but /height",
+  "type": "string",
+  "description": "Arbitrary request identifier echoed in the response.",
   "badge": null,
   "notes": []
 }
