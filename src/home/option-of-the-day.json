@@ -1,9 +1,10 @@
 {
-  "id": "Request.id./route+/optimized_route+/sources_to_targets+/isochrone+/trace_route+/trace_attributes+/locate+/expansion",
-  "name": "id",
-  "scope": "request option · all endpoints but /height",
-  "type": "string",
-  "description": "Arbitrary request identifier echoed in the response.",
+  "id": "Request.matrix_locations",
+  "name": "matrix_locations",
+  "scope": "request option · /sources_to_targets",
+  "type": "integer",
+  "minimum": 1,
+  "description": "Early-exit after finding this many targets. Only valid for TDMatrix algorithm.",
   "badge": null,
   "notes": []
 }
