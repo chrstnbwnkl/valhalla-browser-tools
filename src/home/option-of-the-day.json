@@ -1,10 +1,10 @@
 {
-  "id": "Request.matrix_locations",
-  "name": "matrix_locations",
-  "scope": "request option · /sources_to_targets",
+  "id": "Location.street_radius",
+  "name": "street_radius",
+  "scope": "location option",
   "type": "integer",
-  "minimum": 1,
-  "description": "Early-exit after finding this many targets. Only valid for TDMatrix algorithm.",
-  "badge": null,
+  "minimum": 0,
+  "description": "Radius in meters in which edges are scored against `street`, defaults to 200. The max value is service configuration dependent (5000 by default).",
+  "badge": "new in Valhalla",
   "notes": []
 }
