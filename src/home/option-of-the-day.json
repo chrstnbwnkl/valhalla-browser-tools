@@ -1,10 +1,11 @@
 {
-  "id": "Location.street_radius",
-  "name": "street_radius",
-  "scope": "location option",
-  "type": "integer",
+  "id": "Base.use_living_streets",
+  "name": "use_living_streets",
+  "scope": "costing option · all costings",
+  "type": "number",
   "minimum": 0,
-  "description": "Radius in meters in which edges are scored against `street`, defaults to 200. The max value is service configuration dependent (5000 by default).",
-  "badge": "new in Valhalla",
+  "maximum": 1,
+  "description": "This value indicates the willingness to take living streets. This is a range of values between 0 and 1. Values near 0 attempt to avoid living streets and values near 1 will favor living streets. The default value is 0 for truck, 0.5 for bicycle, 0.6 for pedestrian, 0.1 otherwise. Note that sometimes living streets are required to complete a route so values of 0 are not guaranteed to avoid living streets entirely.",
+  "badge": null,
   "notes": []
 }
